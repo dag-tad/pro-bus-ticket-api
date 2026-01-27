@@ -14,6 +14,7 @@ import { VerifyOtpDTO } from 'src/dto/verify-otp.dto';
 import { OTPVerifyJWTGuard } from './guard/otp-verify-jwt.guard';
 import { RefreshJwtAuthGuard } from './guard/refresh-token-jwt.guard';
 import { AccessTokenJWTGuard } from './guard/access-token-jwt.guard';
+import { ChangePasswordDto } from 'src/dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -57,11 +58,18 @@ export class AuthController {
     return await this.authService.refreshToken(sub);
   }
 
-  // @Post('test')
-  // @UseGuards(AccessTokenJWTGuard)
-  // async test(@Req() req): Promise<{ message: string } | HttpException> {
-  //   const { sub } = req.user;
+  @Post('change-password')
+  @UseGuards(AccessTokenJWTGuard)
+  async changePassword(
+    @Body() changePasswordDTO: ChangePasswordDto,
+    @Req() req,
+  ): Promise<{ message: string } | HttpException> {
+    const { sub } = req.user;
 
-  //   return await { message: 'success' };
-  // }
+    return await this.authService.changePassword(
+      sub,
+      changePasswordDTO.currentPassword,
+      changePasswordDTO.newPassword,
+    );
+  }
 }
