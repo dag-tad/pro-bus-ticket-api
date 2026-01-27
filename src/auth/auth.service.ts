@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   Inject,
   Injectable,
@@ -15,6 +16,7 @@ import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
+import { ChangePasswordDto } from 'src/dto/change-password.dto';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -227,5 +229,33 @@ export class AuthService {
     );
 
     return { 'refresh-token': refreshToken, 'access-token': accessToken };
+  }
+
+  async changePassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string } | HttpException> {
+    const user = await this.userRepo.findOneBy({ id });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const passwordMatched = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!passwordMatched) {
+      throw new BadRequestException('Invalid current password');
+    }
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await this.userRepo.update({ id }, { password: hashedPassword });
+
+    return { message: 'your password is successfully changed' };
   }
 }
