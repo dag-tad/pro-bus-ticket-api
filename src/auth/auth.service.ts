@@ -258,4 +258,75 @@ export class AuthService {
 
     return { message: 'your password is successfully changed' };
   }
+
+  async resetPasswordRequest(
+    phone: string,
+  ): Promise<{ message: string } | HttpException> {
+    const user = await this.userRepo.findOneBy({ phone });
+
+    if (!user) {
+      return new UnauthorizedException(`${phone} is not registered`);
+    }
+
+    const otp = generateOtp();
+    const url = process.env.SMS_URL!;
+    const sender_short_code = process.env.SMS_SHORT_CODE!;
+    const message = `Your one time password is ${otp}. Use this to reset your password`;
+
+    // save otp on redis
+    await this.redis.set(
+      `auth:reset-password-otp:user:${user.id}`,
+      otp,
+      'EX',
+      300,
+    );
+
+    // this should be removed from here and be included in the notification service
+    await axios.post(
+      url,
+      {
+        sender: sender_short_code,
+        to: user.phone,
+        message,
+      },
+      {
+        headers: {
+          Authorization: process.env.SMS_AUTHORIZATION,
+        },
+      },
+    );
+
+    return { message: 'OTP sent successfully' };
+  }
+
+  async VerifyResetPasswordRequest(
+    password: string,
+    phone: string,
+    otp: string,
+  ): Promise<{ message: string } | HttpException> {
+    const user = await this.userRepo.findOneBy({ phone });
+
+    if (!user) {
+      return new UnauthorizedException(`${phone} is not registered`);
+    }
+
+    const savedOtp = await this.redis.get(
+      `auth:reset-password-otp:user:${user.id}`,
+    );
+
+    if (!savedOtp) {
+      return new UnauthorizedException(`OTP expired`);
+    }
+
+    if (savedOtp !== otp) {
+      return new UnauthorizedException('Incorrect OTP');
+    }
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await this.userRepo.update({ id: user.id }, { password: hashedPassword });
+
+    return { message: 'your password is successfully changed' };
+  }
 }

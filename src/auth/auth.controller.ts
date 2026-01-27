@@ -15,6 +15,8 @@ import { OTPVerifyJWTGuard } from './guard/otp-verify-jwt.guard';
 import { RefreshJwtAuthGuard } from './guard/refresh-token-jwt.guard';
 import { AccessTokenJWTGuard } from './guard/access-token-jwt.guard';
 import { ChangePasswordDto } from 'src/dto/change-password.dto';
+import { RequestResetPasswordDto } from 'src/dto/request-reset-password.dto';
+import { VerifyResetPasswordDto } from 'src/dto/verify-reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -70,6 +72,24 @@ export class AuthController {
       sub,
       changePasswordDTO.currentPassword,
       changePasswordDTO.newPassword,
+    );
+  }
+
+  @Post('reset-password-request')
+  async resetPasswordRequest(
+    @Body() body: RequestResetPasswordDto,
+  ): Promise<{ message: string } | HttpException> {
+    return await this.authService.resetPasswordRequest(body.phoneNumber);
+  }
+
+  @Post('confirm-reset-password-request')
+  async verifyResetPasswordRequest(
+    @Body() body: VerifyResetPasswordDto,
+  ): Promise<{ message: string } | HttpException> {
+    return await this.authService.VerifyResetPasswordRequest(
+      body.newPassword,
+      body.phoneNumber,
+      body.otp,
     );
   }
 }
