@@ -12,7 +12,7 @@ import { Gender } from 'src/enums/gender.enum';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column()
   firstName: string;

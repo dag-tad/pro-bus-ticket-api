@@ -12,8 +12,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { randomInt, sign } from 'crypto';
-import { VerifyOtpDTO } from 'src/dto/verify-otp.dto';
+import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
 
@@ -36,7 +35,9 @@ export class AuthService {
 
   async login(
     loginDTO: LoginDTO,
-  ): Promise<{ token: string; purpose: string } | HttpException> {
+  ): Promise<
+    { 'access-token': string; 'refresh-token': string } | HttpException
+  > {
     const user = await this.userRepo.findOneBy({ email: loginDTO.email });
 
     if (!user) {
@@ -59,8 +60,33 @@ export class AuthService {
         ...payload
       } = user;
 
-      const loginToken = this.jwtService.sign({ sub, ...payload });
-      // auth:session:user:{userId}
+      const jti = randomBytes(64).toString('hex');
+
+      const refreshToken = this.jwtService.sign(
+        {
+          sub,
+          jti,
+          purpose: 'refresh-token',
+        },
+        { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET },
+      );
+
+      const loginToken = this.jwtService.sign(
+        {
+          sub,
+          ...payload,
+          purpose: 'access-token',
+        },
+        { expiresIn: '5m' },
+      );
+
+      // save refresh-token on redis
+      await this.redis.set(
+        `auth:refresh-token:user:${sub}`,
+        refreshToken,
+        'EX',
+        604800,
+      );
 
       if (user.enable2FA) {
         const otp = generateOtp();
@@ -68,7 +94,7 @@ export class AuthService {
         const sender_short_code = process.env.SMS_SHORT_CODE!;
         const message = `Your one time password is ${otp}`;
 
-        // save access-token on redis server
+        // save access-token on redis
         await this.redis.set(
           `auth:access-token:user:${sub}`,
           loginToken,
@@ -76,7 +102,7 @@ export class AuthService {
           500,
         );
 
-        // save otp on redis servier
+        // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
         // this should be removed from here and be included in the notification service
@@ -94,30 +120,50 @@ export class AuthService {
           },
         );
 
-        return { token: this.jwtService.sign({ sub }), purpose: 'otp' };
+        return {
+          'access-token': this.jwtService.sign(
+            { sub, purpose: 'otp' },
+            { expiresIn: '3m' },
+          ),
+          'refresh-token': refreshToken,
+        };
       }
-
       return {
-        token: loginToken,
-        purpose: 'login',
+        'access-token': loginToken,
+        'refresh-token': refreshToken,
       };
     } else {
       throw new UnauthorizedException();
     }
   }
 
-  // async verifyOTP(
-  //   otpDto: VerifyOtpDTO,
-  // ): Promise<{ token: string } | { otpToken: string } | HttpException> {
+  async verifyOTP(
+    userId: string,
+    otp: number,
+  ): Promise<{ 'access-token': string } | HttpException> {
+    const savedOtp = await this.redis.get(`auth:otp:user:${userId}`);
 
-  //  await this.redis.set(
-  //     `auth:otp:user:${userId}`,
-  //     otp,
-  //     'EX',
-  //     300,
-  //   );
-  //     return {  };
-  // }
+    if (!savedOtp) {
+      return new UnauthorizedException();
+    }
+
+    if (parseInt(savedOtp) !== otp) {
+      return new UnauthorizedException();
+    }
+
+    const savedAccessToken = await this.redis.get(
+      `auth:access-token:user:${userId}`,
+    );
+
+    if (!savedAccessToken) {
+      return new UnauthorizedException();
+    }
+
+    await this.redis.del(`auth:otp:user:${userId}`);
+    await this.redis.del(`auth:access-token:user:${userId}`);
+
+    return { 'access-token': savedAccessToken };
+  }
 
   async findOne(email: string): Promise<User> {
     const user = await this.userRepo.findOneBy({
@@ -129,5 +175,57 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async refreshToken(
+    id: string,
+  ): Promise<
+    { 'access-token': string; 'refresh-token': string } | HttpException
+  > {
+    const user = await this.userRepo.findOneBy({ id });
+
+    if (!user) {
+      return new UnauthorizedException('Refresh token revoked or expired');
+    }
+
+    const jti = randomBytes(64).toString('hex');
+
+    const {
+      password,
+      passwordHistor,
+      enabled,
+      enable2FA,
+      lastLogin,
+      id: sub,
+      ...payload
+    } = user;
+
+    const refreshToken = this.jwtService.sign(
+      {
+        sub,
+        jti,
+        purpose: 'refresh-token',
+      },
+      { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET },
+    );
+
+    const accessToken = this.jwtService.sign(
+      {
+        sub,
+        ...payload,
+        purpose: 'access-token',
+      },
+      { expiresIn: '5m' },
+    );
+
+    // save refresh-token on redis
+    await this.redis.set(
+      `auth:refresh-token:user:${sub}`,
+      refreshToken,
+      'EX',
+      604800,
+    );
+
+    return { 'refresh-token': refreshToken, 'access-token': accessToken };
   }
 }
