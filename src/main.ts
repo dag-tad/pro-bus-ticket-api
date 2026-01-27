@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import dataSource from 'db/data-source';
 import { ValidationPipe } from '@nestjs/common';
+import crypto from 'crypto';
 
 async function bootstrap() {
   // try {

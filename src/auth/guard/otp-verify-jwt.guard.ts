@@ -25,9 +25,9 @@ export class OTPVerifyJWTGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
 
-    // if (user.purpose !== 'otp') {
-    //   throw new UnauthorizedException('Invalid OTP token');
-    // }
+    if (user.purpose !== 'otp') {
+      throw new UnauthorizedException('Invalid OTP token');
+    }
 
     if (user.sub) {
       return user;
