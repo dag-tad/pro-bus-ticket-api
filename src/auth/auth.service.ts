@@ -435,4 +435,10 @@ export class AuthService {
 
     return { message: 'your password is successfully changed' };
   }
+
+  async logout(id: string): Promise<{ message: string }> {
+    await this.redis.del(`auth:refresh-token:user:${id}`);
+
+    return { message: 'signed out successfully.' };
+  }
 }

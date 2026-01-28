@@ -75,6 +75,14 @@ export class AuthController {
     );
   }
 
+  @Post('logout')
+  @UseGuards(AccessTokenJWTGuard)
+  async logout(@Req() req): Promise<{ message: string } | HttpException> {
+    const { sub } = req.user;
+
+    return await this.authService.logout(sub);
+  }
+
   @Post('reset-password-request')
   async resetPasswordRequest(
     @Body() body: RequestResetPasswordDto,
