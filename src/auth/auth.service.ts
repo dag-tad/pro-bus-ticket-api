@@ -40,11 +40,36 @@ export class AuthService {
   ): Promise<
     { 'access-token': string; 'refresh-token': string } | HttpException
   > {
-    const user = await this.userRepo.findOneBy({ email: loginDTO.email });
+    const user = await this.userRepo.findOneBy({
+      email: loginDTO.email,
+    });
 
     if (!user) {
-      throw new NotFoundException();
+      throw new UnauthorizedException('Incorrect email.');
     }
+
+    if (!user.enabled) {
+      throw new UnauthorizedException(
+        'Your account has been blocked. Please contact the administrator.',
+      );
+    }
+
+    const loginAttemptKey = `auth:login-attempt-count:user:${user.id}`;
+    const temporaryLockKey = `auth:temporary-lock:user:${user.id}`;
+    const blockUserKey = `auth:block-user:user:${user.id}`;
+
+    const temporaryLocked = (await this.redis.get(
+      temporaryLockKey,
+    )) as unknown as boolean;
+
+    if (temporaryLocked) {
+      throw new UnauthorizedException(
+        'You are temporarly locked. Please try again later.',
+      );
+    }
+
+    const loginAttemptCount = await this.redis.incr(loginAttemptKey);
+    this.redis.expire(loginAttemptKey, 180);
 
     const passwordMatched = await bcrypt.compare(
       loginDTO.password,
@@ -130,12 +155,47 @@ export class AuthService {
           'refresh-token': refreshToken,
         };
       }
+
+      await this.redis.del(loginAttemptKey);
+      await this.redis.del(temporaryLockKey);
+      await this.redis.del(blockUserKey);
+
       return {
         'access-token': loginToken,
         'refresh-token': refreshToken,
       };
     } else {
-      throw new UnauthorizedException();
+      const userBlocked = (await this.redis.get(
+        blockUserKey,
+      )) as unknown as boolean;
+
+      if (loginAttemptCount === 3 && !temporaryLocked && !userBlocked) {
+        await this.redis.set(temporaryLockKey, 'true');
+        await this.redis.expire(temporaryLockKey, 60);
+
+        await this.redis.set(blockUserKey, 'true');
+
+        await this.redis.set(loginAttemptKey, 0);
+
+        throw new UnauthorizedException(
+          'You are temporarly locked. Please try again later.',
+        );
+      } else if (loginAttemptCount === 3 && userBlocked) {
+        await this.userRepo.update(
+          { id: user.id },
+          { enabled: false, lockedReason: 'Too many login attempt' },
+        );
+
+        throw new UnauthorizedException(
+          'You account has been blocked. Please contact the administrator.',
+        );
+      }
+
+      if (loginAttemptCount === 3) {
+        await this.redis.expire(loginAttemptKey, 500);
+      } else if (loginAttemptCount === 5) {
+      }
+      throw new UnauthorizedException('Incorrect password');
     }
   }
 

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Gender } from 'src/enums/gender.enum';
+import { IsOptional } from 'class-validator';
 
 @Entity('users')
 export class User {
@@ -47,6 +48,10 @@ export class User {
 
   @Column({ type: 'boolean', default: true })
   enabled: boolean;
+
+  @Column({ type: 'text' })
+  @IsOptional()
+  lockedReason: string;
 
   @Column({ default: false, type: 'boolean' })
   enable2FA: boolean;
