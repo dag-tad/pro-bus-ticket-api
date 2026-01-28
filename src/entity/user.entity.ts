@@ -33,6 +33,10 @@ export class User {
   @Exclude()
   password: string;
 
+  @Column({ type: 'text', array: true, default: () => 'ARRAY[]::text[]' })
+  @Exclude()
+  passwordHistory: string[];
+
   @Column()
   @Exclude()
   fanNumber: string;
