@@ -242,6 +242,17 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
+    // check if the user has been using the new password previously
+    const passwordHistor = user.passwordHistory;
+
+    for (const oldHash of passwordHistor) {
+      const match = await bcrypt.compare(newPassword, oldHash);
+
+      if (match) {
+        throw new BadRequestException('You cannot reuse an old password');
+      }
+    }
+
     const passwordMatched = await bcrypt.compare(
       currentPassword,
       user.password,
@@ -254,7 +265,19 @@ export class AuthService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await this.userRepo.update({ id }, { password: hashedPassword });
+    const history = Array.isArray(user.passwordHistory)
+      ? user.passwordHistory
+      : [];
+
+    const newPasswordHistory = [hashedPassword, ...history].slice(
+      0,
+      parseInt(process.env.MAX_PASSWORD_HISTORY || '7'),
+    );
+
+    await this.userRepo.update(
+      { id },
+      { password: hashedPassword, passwordHistory: newPasswordHistory },
+    );
 
     return { message: 'your password is successfully changed' };
   }
@@ -322,10 +345,33 @@ export class AuthService {
       return new UnauthorizedException('Incorrect OTP');
     }
 
+    // check if the user has been using the new password previously
+    const passwordHistor = user.passwordHistory;
+
+    for (const oldHash of passwordHistor) {
+      const match = await bcrypt.compare(password, oldHash);
+
+      if (match) {
+        throw new BadRequestException('You cannot reuse an old password');
+      }
+    }
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    await this.userRepo.update({ id: user.id }, { password: hashedPassword });
+    const history = Array.isArray(user.passwordHistory)
+      ? user.passwordHistory
+      : [];
+
+    const newPasswordHistory = [hashedPassword, ...history].slice(
+      0,
+      parseInt(process.env.MAX_PASSWORD_HISTORY || '7'),
+    );
+
+    await this.userRepo.update(
+      { id: user.id },
+      { password: hashedPassword, passwordHistory: newPasswordHistory },
+    );
 
     return { message: 'your password is successfully changed' };
   }
