@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,6 +18,10 @@ import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
 import { ChangePasswordDto } from 'src/dto/change-password.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { connect } from 'amqp-connection-manager';
+import { RabbitMQClient } from 'src/util/messaging/client';
+import { SEND_OTP_BY_SMS } from 'src/util/messaging/types/sendOtpBySms';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -34,6 +39,15 @@ export class AuthService {
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
   ) {}
+
+  // async onModuleInit() {
+  //   try {
+  //     await this.rabbitClient.connect();
+  //     console.log('✅ Auth service connected to RabbitMQ');
+  //   } catch (err) {
+  //     console.log('❌ Producer failed to connect to RabbitMQ', err);
+  //   }
+  // }
 
   async login(
     loginDTO: LoginDTO,
@@ -107,7 +121,7 @@ export class AuthService {
         { expiresIn: '5m' },
       );
 
-      // save refresh-token on redis
+      // save refresh-token on redis.
       await this.redis.set(
         `auth:refresh-token:user:${sub}`,
         refreshToken,
@@ -117,8 +131,6 @@ export class AuthService {
 
       if (user.enable2FA) {
         const otp = generateOtp();
-        const url = process.env.SMS_URL!;
-        const sender_short_code = process.env.SMS_SHORT_CODE!;
         const message = `Your one time password is ${otp}`;
 
         // save access-token on redis
@@ -132,17 +144,16 @@ export class AuthService {
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
-        // this should be removed from here and be included in the notification service
-        await axios.post(
-          url,
+        await RabbitMQClient.publish<SEND_OTP_BY_SMS>(
+          'otp',
+          'notification.otp.generated',
           {
-            sender: sender_short_code,
-            to: user.phone,
-            message,
-          },
-          {
-            headers: {
-              Authorization: process.env.SMS_AUTHORIZATION,
+            event: 'notification.sms.send',
+            version: 1,
+            timestamp: new Date().toISOString(),
+            payload: {
+              to: user.phone,
+              message: message,
             },
           },
         );

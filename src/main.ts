@@ -1,18 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import crypto from 'crypto';
+import { RabbitMQClient } from './util/messaging/client';
 
 async function bootstrap() {
-  // try {
-  //   await dataSource.initialize();
-  //   console.log('✅ Database connected successfully');
-  // } catch (err) {
-  //   console.error('❌ Database connection failed', err);
-  //   process.exit(1);
-  // }
+  await RabbitMQClient.init(process.env.RABBITMQ_URL!);
 
   const app = await NestFactory.create(AppModule);
+      await RabbitMQClient.init(process.env.RABBITMQ_URL!);
 
   app.useGlobalPipes(new ValidationPipe());
 
