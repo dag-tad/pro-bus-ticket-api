@@ -22,6 +22,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { connect } from 'amqp-connection-manager';
 import { RabbitMQClient } from 'src/util/messaging/client';
 import { SEND_OTP_BY_SMS } from 'src/util/messaging/types/sendOtpBySms';
+import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -144,19 +145,23 @@ export class AuthService {
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
-        await RabbitMQClient.publish<SEND_OTP_BY_SMS>(
-          'otp',
-          'notification.otp.generated',
-          {
-            event: 'notification.sms.send',
-            version: 1,
-            timestamp: new Date().toISOString(),
-            payload: {
-              to: user.phone,
-              message: message,
-            },
+        const exchange = 'otp';
+        const routeKey =
+          user.notificationMethod === NOTIFICATION_METHOD.SMS
+            ? 'notification.sms.generated'
+            : 'notification.email.generated';
+        const event = user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
+
+        await RabbitMQClient.publish<SEND_OTP_BY_SMS>(exchange, routeKey, {
+          event,
+          version: 1,
+          timestamp: new Date().toISOString(),
+          payload: {
+             otp,
+             name: `${user.firstName} ${user.lastName}`,
+             email: user.email
           },
-        );
+        });
 
         return {
           'access-token': this.jwtService.sign(

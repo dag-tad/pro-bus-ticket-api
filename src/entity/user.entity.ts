@@ -9,6 +9,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { Gender } from 'src/enums/gender.enum';
 import { IsOptional } from 'class-validator';
+import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
 
 @Entity('users')
 export class User {
@@ -55,6 +56,13 @@ export class User {
 
   @Column({ default: false, type: 'boolean' })
   enable2FA: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: NOTIFICATION_METHOD,
+    default: NOTIFICATION_METHOD.EMAIL,
+  })
+  notificationMethod: NOTIFICATION_METHOD;
 
   // @Column({ type: 'int', default: 0 })
   // otpRequestCount: number;
