@@ -21,7 +21,6 @@ import dataSource from 'db/data-source';
     UserModule,
     RedisModule,
     TypeOrmModule.forRoot(dataSource.options),
-    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
