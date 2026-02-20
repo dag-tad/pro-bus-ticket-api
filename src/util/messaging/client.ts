@@ -1,9 +1,11 @@
-import amqp, {
-  Channel,
-  Connection,
-  ConsumeMessage,
-} from 'amqplib';
+import amqp, { Channel, Connection, ConsumeMessage } from 'amqplib';
 import { MessageEnvelope } from './message-envelop';
+
+type ConsumerHandler<T> = (
+  message: MessageEnvelope<T>,
+  raw: ConsumeMessage,
+  channel: Channel,
+) => Promise<void>;
 
 type ConsumeHandler<T> = (
   message: MessageEnvelope<T>,
@@ -14,12 +16,16 @@ type ConsumeHandler<T> = (
 export class RabbitMQClient {
   private static connection: Connection | null = null;
   private static channel: Channel | null = null;
+  private static initialized = false;
 
   static async init(url: string): Promise<void> {
     if (!this.connection || !this.channel) {
       this.connection = await amqp.connect(url);
       this.channel = await this.connection.createChannel();
       this.channel.prefetch(1);
+
+      this.initialized = true;
+      console.log('✅ RabbitMQ connected');
     }
   }
 
@@ -34,11 +40,9 @@ export class RabbitMQClient {
 
     await this.channel.assertQueue(queue, { durable: true });
 
-    this.channel.sendToQueue(
-      queue,
-      Buffer.from(JSON.stringify(envelope)),
-      { persistent: true },
-    );
+    this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(envelope)), {
+      persistent: true,
+    });
   }
 
   // -----------------------------
@@ -62,16 +66,33 @@ export class RabbitMQClient {
     );
   }
 
+  private static ensureInit(): void {
+    if (!this.initialized) {
+      throw new Error('RabbitMQClient not initialized. Call init() first.');
+    }
+  }
   // -----------------------------
   // CONSUMER ← QUEUE
   // -----------------------------
   static async consume<T>(
     queue: string,
-    handler: ConsumeHandler<T>,
+    exchange: string,
+    routingKeys: string[],
+    handler: ConsumerHandler<T>,
   ): Promise<void> {
-    if (!this.channel) throw new Error('RabbitMQ not initialized');
+    this.ensureInit();
 
-    await this.channel.assertQueue(queue, { durable: true });
+    await this.channel.assertExchange(exchange, 'topic', {
+      durable: true,
+    });
+
+    await this.channel.assertQueue(queue, {
+      durable: true,
+    });
+
+    for (const key of routingKeys) {
+      await this.channel.bindQueue(queue, exchange, key);
+    }
 
     await this.channel.consume(queue, async (msg) => {
       if (!msg) return;
@@ -81,11 +102,11 @@ export class RabbitMQClient {
           msg.content.toString(),
         ) as MessageEnvelope<T>;
 
-        await handler(envelope, msg, this.channel!);
-        this.channel!.ack(msg);
-      } catch (error) {
-        console.error('❌ Message processing failed', error);
-        this.channel!.nack(msg, false, false);
+        await handler(envelope, msg, this.channel);
+        this.channel.ack(msg);
+      } catch (err) {
+        console.error('❌ Consume failed', err);
+        this.channel.nack(msg, false, false);
       }
     });
   }

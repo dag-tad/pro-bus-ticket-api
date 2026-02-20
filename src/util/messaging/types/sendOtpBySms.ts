@@ -1,5 +1,6 @@
-export interface SEND_OTP_BY_SMS {
+export interface SEND_OTP {
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   otp: string;
 }

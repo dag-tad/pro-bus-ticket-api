@@ -4,6 +4,7 @@ import { UserService } from './user.service';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/entity/user.entity';
+import { UserHandler } from 'src/handlers/user.handler';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { User } from 'src/entity/user.entity';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  providers: [UserService, UserHandler],
+  exports: [UserService, UserHandler],
 })
 export class UserModule {}

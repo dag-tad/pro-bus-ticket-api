@@ -1,14 +1,14 @@
-FROM node:18-alpine AS development
+FROM node:22-alpine 
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
 COPY yarn.lock* ./
 
-RUN npm ci
+RUN npm i
 
 COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:dev"]
+CMD ["npm", "start"]

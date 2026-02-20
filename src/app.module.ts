@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { RedisModule } from './redis/redis.module';
 
 import configuration from './config/configuration';
-import dataSource from 'db/data-source';
 
 @Module({
   imports: [
@@ -20,7 +19,20 @@ import dataSource from 'db/data-source';
     AuthModule,
     UserModule,
     RedisModule,
-    TypeOrmModule.forRoot(dataSource.options),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): TypeOrmModuleOptions => ({
+        type: 'postgres',
+        url: config.get<string>('DB_URL'),
+        ssl: {
+          rejectUnauthorized: false,
+        },
+        autoLoadEntities: true,
+        synchronize: true,
+        entities: ['dist/**/*.entity.js'],
+      }),
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

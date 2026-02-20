@@ -87,7 +87,7 @@ export class AuthController {
   async resetPasswordRequest(
     @Body() body: RequestResetPasswordDto,
   ): Promise<{ message: string } | HttpException> {
-    return await this.authService.resetPasswordRequest(body.phoneNumber);
+    return await this.authService.resetPasswordRequest(body.fanNumber);
   }
 
   @Post('confirm-reset-password-request')
@@ -96,7 +96,7 @@ export class AuthController {
   ): Promise<{ message: string } | HttpException> {
     return await this.authService.VerifyResetPasswordRequest(
       body.newPassword,
-      body.phoneNumber,
+      body.fanNumber,
       body.otp,
     );
   }

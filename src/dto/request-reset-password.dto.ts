@@ -1,6 +1,6 @@
-import { IsPhoneNumber } from 'class-validator';
+import { IsPhoneNumber, IsString } from 'class-validator';
 
 export class RequestResetPasswordDto {
-  @IsPhoneNumber()
-  phoneNumber: string;
+  @IsString()
+  fanNumber: string;
 }

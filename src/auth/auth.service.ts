@@ -3,8 +3,6 @@ import {
   HttpException,
   Inject,
   Injectable,
-  NotFoundException,
-  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,11 +15,8 @@ import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
-import { ChangePasswordDto } from 'src/dto/change-password.dto';
-import { ClientProxy } from '@nestjs/microservices';
-import { connect } from 'amqp-connection-manager';
 import { RabbitMQClient } from 'src/util/messaging/client';
-import { SEND_OTP_BY_SMS } from 'src/util/messaging/types/sendOtpBySms';
+import { SEND_OTP, } from 'src/util/messaging/types/sendOtpBySms';
 import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
 
 export function generateOtp(length = 6): string {
@@ -56,11 +51,10 @@ export class AuthService {
     { 'access-token': string; 'refresh-token': string } | HttpException
   > {
     const user = await this.userRepo.findOneBy({
-      email: loginDTO.email,
+      fanNumber: loginDTO.fanNumber,
     });
-
     if (!user) {
-      throw new UnauthorizedException('Incorrect email.');
+      throw new UnauthorizedException('Incorrect fanNumber.');
     }
 
     if (!user.enabled) {
@@ -94,7 +88,7 @@ export class AuthService {
     if (passwordMatched) {
       const {
         password,
-        passwordHistor,
+        passwordHistory,
         enabled,
         enable2FA,
         lastLogin,
@@ -152,16 +146,18 @@ export class AuthService {
             : 'notification.email.generated';
         const event = user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
 
-        await RabbitMQClient.publish<SEND_OTP_BY_SMS>(exchange, routeKey, {
-          event,
-          version: 1,
-          timestamp: new Date().toISOString(),
-          payload: {
-             otp,
-             name: `${user.firstName} ${user.lastName}`,
-             email: user.email
-          },
-        });
+          await RabbitMQClient.publish<SEND_OTP>(exchange, routeKey, {
+            event,
+            version: 1,
+            timestamp: new Date().toISOString(),
+            payload: {
+              otp,
+              name: `${user.firstName} ${user.lastName}`,
+              email: user.notificationMethod === NOTIFICATION_METHOD.EMAIL ? user.email : undefined,
+              phone: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : undefined,
+            },
+          });
+        
 
         return {
           'access-token': this.jwtService.sign(
@@ -270,7 +266,7 @@ export class AuthService {
 
     const {
       password,
-      passwordHistor,
+      passwordHistory,
       enabled,
       enable2FA,
       lastLogin,
@@ -359,12 +355,12 @@ export class AuthService {
   }
 
   async resetPasswordRequest(
-    phone: string,
+    fanNumber: string,
   ): Promise<{ message: string } | HttpException> {
-    const user = await this.userRepo.findOneBy({ phone });
+    const user = await this.userRepo.findOneBy({ fanNumber });
 
     if (!user) {
-      return new UnauthorizedException(`${phone} is not registered`);
+      return new UnauthorizedException(`${fanNumber} is not registered`);
     }
 
     const otp = generateOtp();
@@ -400,13 +396,13 @@ export class AuthService {
 
   async VerifyResetPasswordRequest(
     password: string,
-    phone: string,
+    fanNumber: string,
     otp: string,
   ): Promise<{ message: string } | HttpException> {
-    const user = await this.userRepo.findOneBy({ phone });
+    const user = await this.userRepo.findOneBy({ fanNumber });
 
     if (!user) {
-      return new UnauthorizedException(`${phone} is not registered`);
+      return new UnauthorizedException(`${fanNumber} is not registered registered FAN number`);
     }
 
     const savedOtp = await this.redis.get(

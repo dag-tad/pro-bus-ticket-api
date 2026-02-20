@@ -2,17 +2,14 @@ import {
   IsString,
   MinLength,
   MaxLength,
-  Validate,
-  IsNumber,
-  IsPhoneNumber,
   IsNotEmpty,
 } from 'class-validator';
 import { Match } from 'src/util/match.decorator';
 
 export class VerifyResetPasswordDto {
-  @IsPhoneNumber()
+  @IsString()
   @IsNotEmpty()
-  phoneNumber: string;
+  fanNumber: string;
 
   @IsString()
   @IsNotEmpty()
