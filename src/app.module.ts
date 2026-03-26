@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { RedisModule } from './redis/redis.module';
 
 import configuration from './config/configuration';
+import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import configuration from './config/configuration';
       isGlobal: true,
       load: [configuration],
     }),
+    RabbitMQModule,
     AuthModule,
     UserModule,
     RedisModule,
