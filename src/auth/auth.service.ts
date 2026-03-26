@@ -15,9 +15,8 @@ import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
-import { RabbitMQClient } from 'src/util/messaging/client';
-import { SEND_OTP, } from 'src/util/messaging/types/sendOtpBySms';
 import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
+import { AuthProducer } from 'src/rabbitmq/producer/auth.producer';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -34,16 +33,8 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
-  ) {}
-
-  // async onModuleInit() {
-  //   try {
-  //     await this.rabbitClient.connect();
-  //     console.log('✅ Auth service connected to RabbitMQ');
-  //   } catch (err) {
-  //     console.log('❌ Producer failed to connect to RabbitMQ', err);
-  //   }
-  // }
+    private readonly authProducer: AuthProducer
+  ) { }
 
   async login(
     loginDTO: LoginDTO,
@@ -53,6 +44,7 @@ export class AuthService {
     const user = await this.userRepo.findOneBy({
       fanNumber: loginDTO.fanNumber,
     });
+
     if (!user) {
       throw new UnauthorizedException('Incorrect fanNumber.');
     }
@@ -126,7 +118,6 @@ export class AuthService {
 
       if (user.enable2FA) {
         const otp = generateOtp();
-        const message = `Your one time password is ${otp}`;
 
         // save access-token on redis
         await this.redis.set(
@@ -139,25 +130,19 @@ export class AuthService {
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
-        const exchange = 'otp';
-        const routeKey =
-          user.notificationMethod === NOTIFICATION_METHOD.SMS
-            ? 'notification.sms.generated'
-            : 'notification.email.generated';
-        const event = user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
-
-          await RabbitMQClient.publish<SEND_OTP>(exchange, routeKey, {
-            event,
-            version: 1,
-            timestamp: new Date().toISOString(),
-            payload: {
-              otp,
-              name: `${user.firstName} ${user.lastName}`,
-              email: user.notificationMethod === NOTIFICATION_METHOD.EMAIL ? user.email : undefined,
-              phone: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : undefined,
-            },
+        const routingKey = user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
+        const message = `Your One time password is ${otp}`
+        try {
+          await this.authProducer.publishLoginSuccess({
+            otp, name: `${user.firstName} ${user.lastName}`,
+            to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : undefined,
+            message
+          }, {
+            routingKey 
           });
-        
+        } catch (error) {
+          console.error(error)
+        }
 
         return {
           'access-token': this.jwtService.sign(

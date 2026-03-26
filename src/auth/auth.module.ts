@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt-strategy';
 import { RefreshJwtStrategy } from './refresh-token-jwt-strategy';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -28,8 +29,23 @@ import { RefreshJwtStrategy } from './refresh-token-jwt-strategy';
         };
       },
     }),
+    // ClientsModule.register([
+    //   {
+    //     name: 'NOTIFICATION_SERVICE',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: ["amqps://elmmmbip:Dd8P-atTw38DKbZPd2_jW51V6O-V0HL1@collie.lmq.cloudamqp.com/elmmmbip",],
+    //       exchange: 'notifications',
+    //       exchangeType: 'topic',
+    //       queueOptions: {
+    //         durable: true,
+    //       },
+    //     },
+    //   },
+    // ]),
   ],
   providers: [AuthService, JwtStrategy, RefreshJwtStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+
+export class AuthModule { }
