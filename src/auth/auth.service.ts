@@ -130,12 +130,15 @@ export class AuthService {
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
-        const routingKey = user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
+        const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
         const message = `Your One time password is ${otp}`
         try {
           await this.authProducer.publishLoginSuccess({
-            otp, name: `${user.firstName} ${user.lastName}`,
-            to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : undefined,
+            type: 'otp',
+            otp, 
+            name: `${user.firstName} ${user.lastName}`,
+            medium: user.notificationMethod,
+            to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
             message
           }, {
             routingKey 

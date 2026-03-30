@@ -67,7 +67,7 @@ export abstract class AbstractProducer implements OnModuleInit {
       );
     }
 
-    this.logger.debug(
+    this.logger.log(
       `Publishing message to ${this.config.exchangeName} with routing key: ${routingKey}`,
     );
 

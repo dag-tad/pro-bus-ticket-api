@@ -6,10 +6,13 @@ import {
   PublishOptions,
 } from './abstract.producer';
 import { RabbitMQService } from '../rabbitmq.service';
+import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
 
 export interface LoginSuccessMessage {
   otp: string;
   to?: string;
+  type: string;
+  medium: NOTIFICATION_METHOD;
   name: string;
   message: string;
   timestamp?: string;
@@ -38,7 +41,7 @@ export class AuthProducer extends AbstractProducer {
     const config: ProducerConfig = {
       exchangeName: 'auth_exchange',
       exchangeType: 'topic',
-      defaultRoutingKey: 'login.successful',
+      defaultRoutingKey: 'otp.send',
       exchangeOptions: {
         durable: true,
       },
@@ -53,15 +56,14 @@ export class AuthProducer extends AbstractProducer {
     data: LoginSuccessMessage,
     options?: PublishOptions,
   ): Promise<boolean> {
-    
     const message = {
-      event: 'login.successful',
+      event: 'otp.send',
       ...data,
       timestamp: data.timestamp || new Date().toISOString(),
     };
-
+console.log(message, options)
     return this.publish(message, {
-      routingKey: 'login.successful',
+      routingKey: 'otp.send',
       ...options,
     });
   }
