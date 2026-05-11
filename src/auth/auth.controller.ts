@@ -17,7 +17,6 @@ import { AccessTokenJWTGuard } from './guard/access-token-jwt.guard';
 import { ChangePasswordDto } from 'src/dto/change-password.dto';
 import { RequestResetPasswordDto } from 'src/dto/request-reset-password.dto';
 import { VerifyResetPasswordDto } from 'src/dto/verify-reset-password.dto';
-
 @Controller('auth')
 export class AuthController {
   constructor(

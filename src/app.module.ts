@@ -9,6 +9,9 @@ import { RedisModule } from './redis/redis.module';
 
 import configuration from './config/configuration';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+import { BusService } from './bus/bus.service';
+import { BusController } from './bus/bus.controller';
+import { BusModule } from './bus/bus.module';
 
 @Module({
   imports: [
@@ -20,6 +23,7 @@ import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
     RabbitMQModule,
     AuthModule,
     UserModule,
+    BusModule,
     RedisModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -32,11 +36,11 @@ import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
         },
         autoLoadEntities: true,
         synchronize: true,
-        entities: ['dist/**/*.entity.js'],
+        entities: ['dist/**/*.entity.js']
       }),
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController,],
+  providers: [AppService,],
 })
-export class AppModule {}
+export class AppModule { }

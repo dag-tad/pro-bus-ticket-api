@@ -42,11 +42,11 @@ export class AuthService {
     { 'access-token': string; 'refresh-token': string } | HttpException
   > {
     const user = await this.userRepo.findOneBy({
-      fanNumber: loginDTO.fanNumber,
+      phone: loginDTO.phone,
     });
 
     if (!user) {
-      throw new UnauthorizedException('Incorrect fanNumber.');
+      throw new UnauthorizedException('Incorrect credentials. Please inter your phone number and password');
     }
 
     if (!user.enabled) {

@@ -9,7 +9,7 @@ export class ChangePasswordDto {
 
   @IsString()
   @MinLength(4)
-  @MaxLength(32)
+  @MaxLength(32,)
   newPassword: string;
 
   @IsString()

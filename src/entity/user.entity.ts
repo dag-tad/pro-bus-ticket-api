@@ -12,8 +12,8 @@ import { Exclude } from 'class-transformer';
 import { Gender } from 'src/enums/gender.enum';
 import { IsOptional } from 'class-validator';
 import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
-import { Realm } from './realm.entity';
-import { Role } from './role.entity';
+import { REALM } from 'src/enums/realm.enum';
+import { ROLE } from 'src/enums/role.enum';
 
 @Entity('users')
 export class User {
@@ -68,6 +68,24 @@ export class User {
   })
   notificationMethod: NOTIFICATION_METHOD;
 
+  @Column({
+    type: 'enum',
+    enum: Gender,
+  })
+  gender?: Gender;
+
+  @Column({
+    type: 'enum',
+    enum: REALM,
+  })
+  realm?: REALM;
+
+  @Column({
+    type: 'enum',
+    enum: ROLE,
+  })
+  role?: ROLE;
+
   @Column({ type: 'timestamptz', nullable: true })
   lastLogin: Date;
 
@@ -86,19 +104,4 @@ export class User {
   @ManyToOne(() => User, (user) => user.createdUsers, { nullable: true })
   @JoinColumn({ name: 'createdById' })
   createdBy?: User;
-
-  @Column({ nullable: true })
-  realmId?: string;
-
-  @ManyToOne(() => Realm, (realm) => realm.users, { nullable: true })
-  @JoinColumn({ name: 'realmId' })
-  realm?: Realm;
-
-  @ManyToMany(() => Role, (role) => role.users)
-  @JoinTable({
-    name: 'user_roles',
-    joinColumn: { name: 'userId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
-  })
-  roles?: Role[];
 }
