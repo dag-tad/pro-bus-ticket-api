@@ -105,7 +105,7 @@ export class AuthService {
           ...payload,
           purpose: 'access-token',
         },
-        { expiresIn: '5m' },
+        { expiresIn: '60m' },
       );
 
       // save refresh-token on redis.
