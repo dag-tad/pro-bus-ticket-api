@@ -9,9 +9,8 @@ import { RedisModule } from './redis/redis.module';
 
 import configuration from './config/configuration';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
-import { BusService } from './bus/bus.service';
-import { BusController } from './bus/bus.controller';
 import { BusModule } from './bus/bus.module';
+import { AccessGuard } from './auth/guard/access.guard';
 
 @Module({
   imports: [
