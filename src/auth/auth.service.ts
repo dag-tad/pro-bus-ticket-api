@@ -16,7 +16,7 @@ import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from 'src/redis/redis.provider';
 import Redis from 'ioredis';
 import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
-import { AuthProducer } from 'src/rabbitmq/producer/auth.producer';
+// import { AuthProducer } from 'src/rabbitmq/producer/auth.producer';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -33,7 +33,7 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
-    private readonly authProducer: AuthProducer
+    // private readonly authProducer: AuthProducer
   ) { }
 
   async login(
@@ -130,19 +130,19 @@ export class AuthService {
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
 
-        const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
-        const message = `Your One time password is ${otp}`
+        // const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
+        // const message = `Your One time password is ${otp}`
         try {
-          await this.authProducer.publishLoginSuccess({
-            type: 'otp',
-            otp, 
-            name: `${user.firstName} ${user.lastName}`,
-            medium: user.notificationMethod,
-            to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
-            message
-          }, {
-            routingKey 
-          });
+          // await this.authProducer.publishLoginSuccess({
+          //   type: 'otp',
+          //   otp, 
+          //   name: `${user.firstName} ${user.lastName}`,
+          //   medium: user.notificationMethod,
+          //   to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
+          //   message
+          // }, {
+          //   routingKey 
+          // });
         } catch (error) {
           console.error(error)
         }

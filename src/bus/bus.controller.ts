@@ -15,14 +15,19 @@ export class BusController {
         private busService: BusService,
     ) { }
 
-    @RequireAccess([REALM.PASSANGER, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+    @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
     @Post('create')
     async createBus(
         @Body() busDto: BusDTO,
-    ): Promise<Bus> {
-        return new Promise((_, resolve) => {
-            resolve(busDto as Bus)
-        })
+    ): Promise<any> {
+        try {
+            return new Promise((resolve, _) => {
+                return resolve(busDto)
+            })
+        } catch (error) {
+            console.log(error)
+            return { message: error.message }
+        }
         // return this.busService.create(busDto);
     }
 }

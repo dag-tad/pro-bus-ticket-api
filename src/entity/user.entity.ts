@@ -6,6 +6,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
@@ -14,6 +15,7 @@ import { IsOptional } from 'class-validator';
 import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
 import { REALM } from 'src/enums/realm.enum';
 import { ROLE } from 'src/enums/role.enum';
+import { Passenger } from './passenger.entity';
 
 @Entity('users')
 export class User {
@@ -104,4 +106,7 @@ export class User {
   @ManyToOne(() => User, (user) => user.createdUsers, { nullable: true })
   @JoinColumn({ name: 'createdById' })
   createdBy?: User;
+
+  @OneToOne(() => Passenger, passenger => passenger.user, { cascade: true })
+  passenger: Passenger;
 }
