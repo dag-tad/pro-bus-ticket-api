@@ -8,7 +8,7 @@ import { UserModule } from './user/user.module';
 import { RedisModule } from './redis/redis.module';
 
 import configuration from './config/configuration';
-import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+// import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { BusModule } from './bus/bus.module';
 import { AccessGuard } from './auth/guard/access.guard';
 
@@ -19,7 +19,7 @@ import { AccessGuard } from './auth/guard/access.guard';
       isGlobal: true,
       load: [configuration],
     }),
-    RabbitMQModule,
+    // RabbitMQModule,
     AuthModule,
     UserModule,
     BusModule,

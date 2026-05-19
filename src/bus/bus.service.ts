@@ -11,7 +11,7 @@ export class BusService {
     async create(busDto: BusDTO): Promise<Bus> {
         const bus = new Bus()
         
-        bus.capacity = busDto.capacity
+        bus.totalSeats = busDto.capacity
         bus.plateNumber = busDto.plateNumber
 
         const result = await this.busRepo.save(bus)
