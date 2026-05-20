@@ -1,14 +1,15 @@
 {
+  "version": 2,
   "builds": [
     {
-      "src": "api/*.ts",
+      "src": "api/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/nestjs.ts"
+      "dest": "api/index.ts"
     }
   ]
 }
