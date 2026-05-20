@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build:serverless",
+  "outputDirectory": "dist",
+  "functions": {
+    "dist/serverless.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/serverless.js"
+    }
+  ]
+}
