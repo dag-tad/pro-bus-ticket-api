@@ -1,14 +1,14 @@
 // transport-company.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
   OneToMany,
   ManyToOne,
   JoinColumn,
-  Index 
+  Index,
 } from 'typeorm';
 import { CommissionType } from 'src/enums/commission-type.enum';
 // import { SubscriptionPlan } from 'src/enums/subscription-plan.enum';
@@ -31,7 +31,7 @@ export class TransportCompany {
 
   // Basic Information
   @Column({ unique: true })
-  licenseNumber: string; // Business registration number
+  licenseNumber: string; // Business license number
 
   @Column({ unique: true })
   name: string; // Legal registered name
@@ -58,37 +58,34 @@ export class TransportCompany {
   alternativePhone: string;
 
   // Contact Information
-  @Column({ type: 'json', nullable: true })
-  address: {
-    region: string;
-    city: string;
-    subCity: string;
-    woreda: string;
-    kebele: string;
-  };
+  @Column()
+  region: string;
 
-  @Column({ type: 'json', nullable: true })
-  locationCoordinates: {
-    lat: number;
-    lng: number;
-  };
+  @Column()
+  city: string;
+
+  @Column({ nullable: true })
+  subcity?: string;
+
+  @Column({ nullable: true })
+  woreda?: string;
 
   // Operational Information
   @Column({
     type: 'enum',
     enum: CompanyStatus,
-    default: CompanyStatus.PENDING
+    default: CompanyStatus.PENDING,
   })
   status: CompanyStatus;
 
   @Column({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt?: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  approvedAt: Date;
+  approvedAt?: Date;
 
   @Column({ type: 'text', nullable: true })
-  rejectionReason: string;
+  rejectionReason?: string;
 
   // Subscription & Commission
   // @Column({
@@ -99,28 +96,28 @@ export class TransportCompany {
   // subscriptionPlan: SubscriptionPlan;
 
   @Column({ type: 'timestamp', nullable: true })
-  subscriptionStartDate: Date;
+  subscriptionStartDate?: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  subscriptionEndDate: Date;
+  subscriptionEndDate?: Date;
 
-  // Single field for commission (handles both percentage and fixed) 
+  // Single field for commission (handles both percentage and fixed)
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 5 })
-  commissionValue: number; // 5 for percentage, or 50 for fixed amount
+  commissionValue?: number; // 5 for percentage, or 50 for fixed amount
 
   @Column({
     type: 'enum',
     enum: CommissionType,
-    default: CommissionType.PERCENTAGE
+    default: CommissionType.PERCENTAGE,
   })
-  commissionType: CommissionType;
+  commissionType?: CommissionType;
 
   // Settings
   @Column({ type: 'json', nullable: true })
-  settings: ICompanySettings;
+  settings?: ICompanySettings;
 
   @Column({ type: 'json', nullable: true })
-  notificationPreferences: {
+  notificationPreferences?: {
     emailNotifications: boolean;
     smsNotifications: boolean;
     lowSeatAlert: boolean;
@@ -144,7 +141,7 @@ export class TransportCompany {
   @Column({ nullable: true })
   updatedById: string;
 
-  @OneToMany(() => Bus, bus => bus.company)
+  @OneToMany(() => Bus, (bus) => bus.company)
   buses: Bus[];
 
   @ManyToOne(() => User)
@@ -157,7 +154,7 @@ export class TransportCompany {
   // @OneToMany(() => CompanyBankAccount, bankAccount => bankAccount.company)
   // bankAccounts: CompanyBankAccount[];
 
-  @OneToMany(() => Trip, trip => trip.company)
+  @OneToMany(() => Trip, (trip) => trip.company)
   trips: Trip[];
 
   // @OneToMany(() => CompanyPayout, payout => payout.company)
@@ -166,13 +163,13 @@ export class TransportCompany {
   // @OneToMany(() => CompanySubscription, subscription => subscription.company)
   // subscriptions: CompanySubscription[];
 
-  @OneToMany(() => CompanyRating, rating => rating.company)
+  @OneToMany(() => CompanyRating, (rating) => rating.company)
   ratings: CompanyRating[];
 
-  @OneToMany(() => CompanyDocument, document => document.company)
+  @OneToMany(() => CompanyDocument, (document) => document.company)
   documents: CompanyDocument[];
 
-  @OneToMany(() => CancellationPolicy, policy => policy.company)
+  @OneToMany(() => CancellationPolicy, (policy) => policy.company)
   cancellationPolicies: CancellationPolicy[];
 
   @UpdateDateColumn()
@@ -218,57 +215,57 @@ export class TransportCompany {
   private async calculateTotalRevenue(): Promise<number> {
     // Aggregate from payouts table
     // const result = await someRepository.sum('totalBookingAmount', { companyId: this.id });
-    return 0 // result || 0;
+    return 0; // result || 0;
   }
 
   private async calculateTotalPayout(): Promise<number> {
     // Aggregate from payouts table where status = COMPLETED
-    // const result = await someRepository.sum('netAmount', { 
-    //   companyId: this.id, 
-    //   status: 'COMPLETED' 
+    // const result = await someRepository.sum('netAmount', {
+    //   companyId: this.id,
+    //   status: 'COMPLETED'
     // });
-    return 0 // result || 0;
+    return 0; // result || 0;
   }
 
   private async calculatePendingPayout(): Promise<number> {
     // Aggregate from payouts table where status = PENDING or PROCESSING
-    // const result = await someRepository.sum('netAmount', { 
-    //   companyId: this.id, 
+    // const result = await someRepository.sum('netAmount', {
+    //   companyId: this.id,
     //   status: In(['PENDING', 'PROCESSING'])
     // });
-    return 0 // result || 0;
+    return 0; // result || 0;
   }
 
   private async calculateTotalBuses(): Promise<number> {
-    return 0 // await someRepository.count({ where: { companyId: this.id } });
+    return 0; // await someRepository.count({ where: { companyId: this.id } });
   }
 
   private async calculateTotalStaff(): Promise<number> {
-    return 0
-    //  await someRepository.count({ 
-    //   where: { 
+    return 0;
+    //  await someRepository.count({
+    //   where: {
     //     companyId: this.id,
     //     role: In(['COMPANY_ADMIN', 'DRIVER', 'CONDUCTOR'])
-    //   } 
+    //   }
     // });
   }
 
   private async calculateActiveRoutes(): Promise<number> {
     // Count distinct routes from trips
     // const result = await someRepository.query(
-    //   `SELECT COUNT(DISTINCT CONCAT(origin_city, '-', destination_city)) 
+    //   `SELECT COUNT(DISTINCT CONCAT(origin_city, '-', destination_city))
     //    FROM trips WHERE company_id = $1 AND status = 'SCHEDULED'`,
     //   [this.id]
     // );
-    return 0 // parseInt(result[0].count) || 0;
+    return 0; // parseInt(result[0].count) || 0;
   }
 
   private async calculateAverageRating(): Promise<number> {
-    const result = 0 // await someRepository.average('rating', { companyId: this.id });
+    const result = 0; // await someRepository.average('rating', { companyId: this.id });
     return result || 0;
   }
 
   private async calculateTotalRatings(): Promise<number> {
-    return await 0 // someRepository.count({ where: { companyId: this.id } });
+    return await 0; // someRepository.count({ where: { companyId: this.id } });
   }
 }

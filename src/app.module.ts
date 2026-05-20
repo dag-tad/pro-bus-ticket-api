@@ -11,6 +11,9 @@ import configuration from './config/configuration';
 // import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { BusModule } from './bus/bus.module';
 import { AccessGuard } from './auth/guard/access.guard';
+import { TransportCompanyService } from './transport-company/transport-company.service';
+import { TransportCompanyController } from './transport-company/transport-company.controller';
+import { TransportCompanyModule } from './transport-company/transport-company.module';
 
 @Module({
   imports: [
@@ -19,7 +22,6 @@ import { AccessGuard } from './auth/guard/access.guard';
       isGlobal: true,
       load: [configuration],
     }),
-    // RabbitMQModule,
     AuthModule,
     UserModule,
     BusModule,
@@ -38,6 +40,7 @@ import { AccessGuard } from './auth/guard/access.guard';
         entities: ['dist/**/*.entity.js']
       }),
     }),
+    TransportCompanyModule,
   ],
   controllers: [AppController,],
   providers: [AppService,],

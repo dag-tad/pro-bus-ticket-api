@@ -17,6 +17,8 @@ import { AccessTokenJWTGuard } from './guard/access-token-jwt.guard';
 import { ChangePasswordDto } from 'src/dto/change-password.dto';
 import { RequestResetPasswordDto } from 'src/dto/request-reset-password.dto';
 import { VerifyResetPasswordDto } from 'src/dto/verify-reset-password.dto';
+import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { User } from 'src/entity/user.entity';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -25,6 +27,16 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @ApiOperation({ summary: 'Authenticate user' })
+  @ApiBody({ type: LoginDTO })
+  @ApiResponse({ status: 200, description: 'Success', schema: {
+    type: 'object',
+    properties: {
+      access_token: { type: 'string' },
+      refresh_token: { type: 'string' },
+    }
+  } })
+  @ApiResponse({ status: 404, description: 'User not found' })
   login(
     @Body() loginDTO: LoginDTO,
   ): Promise<
