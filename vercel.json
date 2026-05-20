@@ -1,17 +1,14 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build:serverless",
-  "outputDirectory": "dist",
-  "functions": {
-    "dist/serverless.js": {
-      "maxDuration": 30,
-      "memory": 1024
+  "builds": [
+    {
+      "src": "api/*.ts",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/serverless.js"
+      "dest": "api/nestjs.ts"
     }
   ]
 }
