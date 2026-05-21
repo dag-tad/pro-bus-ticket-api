@@ -29,10 +29,11 @@ export class AccessTokenJWTGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException();
     }
     
-    if (user.sub) {
-      return user;
-    }
+    return user
+    // if (user.sub) {
+    //   return user;
+    // }
 
-    throw err || new UnauthorizedException();
+    // throw err || new UnauthorizedException();
   }
 }

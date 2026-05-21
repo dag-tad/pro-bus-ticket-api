@@ -14,7 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from '../redis/redis.provider';
-import Redis from 'ioredis';
+import {Redis} from '@upstash/redis';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -110,8 +110,11 @@ export class AuthService {
       await this.redis.set(
         `auth:refresh-token:user:${sub}`,
         refreshToken,
-        'EX',
-        604800,
+        {
+          ex: 604800
+        }
+        // 'EX',
+        // 604800,
       );
 
       if (user.enable2FA) {
@@ -121,16 +124,17 @@ export class AuthService {
         await this.redis.set(
           `auth:access-token:user:${sub}`,
           loginToken,
-          'EX',
-          500,
+          {
+            ex: 500
+          }
         );
 
         // save otp on redis
-        await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300);
+        await this.redis.set(`auth:otp:user:${sub}`, otp, { ex: 300 });
 
         // const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
         // const message = `Your One time password is ${otp}`
-        try {
+        // try {
           // await this.authProducer.publishLoginSuccess({
           //   type: 'otp',
           //   otp, 
@@ -141,9 +145,9 @@ export class AuthService {
           // }, {
           //   routingKey 
           // });
-        } catch (error) {
-          console.error(error)
-        }
+        // } catch (error) {
+        //   console.error(error)
+        // }
 
         return {
           'access-token': this.jwtService.sign(
@@ -207,7 +211,7 @@ export class AuthService {
       return new UnauthorizedException();
     }
 
-    if (parseInt(savedOtp) !== otp) {
+    if (Number(savedOtp) !== otp) {
       return new UnauthorizedException();
     }
 
@@ -222,7 +226,7 @@ export class AuthService {
     await this.redis.del(`auth:otp:user:${userId}`);
     await this.redis.del(`auth:access-token:user:${userId}`);
 
-    return { 'access-token': savedAccessToken };
+    return { 'access-token': savedAccessToken as string };
   }
 
   async findOne(email: string): Promise<User> {
@@ -282,8 +286,7 @@ export class AuthService {
     await this.redis.set(
       `auth:refresh-token:user:${sub}`,
       refreshToken,
-      'EX',
-      604800,
+      { ex: 604800 }
     );
 
     return { 'refresh-token': refreshToken, 'access-token': accessToken };
@@ -358,8 +361,9 @@ export class AuthService {
     await this.redis.set(
       `auth:reset-password-otp:user:${user.id}`,
       otp,
-      'EX',
-      300,
+      {
+        ex: 300
+      }
     );
 
     // this should be removed from here and be included in the notification service

@@ -4,11 +4,14 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiOperation,
@@ -20,17 +23,28 @@ import { extname } from 'path';
 import { CreateTransportCompanyDTO } from 'src/dto/create-transport-company.dto';
 
 import { TransportCompanyService } from './transport-company.service';
+import { AccessTokenJWTGuard } from 'src/auth/guard/access-token-jwt.guard';
+import { AccessGuard } from 'src/auth/guard/access.guard';
+import { RequireAccess } from 'src/decorators/access.decorator';
+import { REALM } from 'src/enums/realm.enum';
+import { ROLE } from 'src/enums/role.enum';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
+@ApiBearerAuth('access-token')
+@UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class TransportCompanyController {
   constructor(private readonly service: TransportCompanyService) {}
+
+  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
   @Get()
-  list() {
-    return 'hello';
+  async findAll(@Query() options: PaginationDto) {
+    return await this.service.findAll(options);
   }
 
   @Post()
+  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
   @ApiOperation({ summary: 'Create transport company' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -68,8 +82,8 @@ export class TransportCompanyController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateTransportCompanyDTO,
   ) {
-    const result = await this.service.create(file, body)
+    const result = await this.service.create(file, body);
 
-    return result
+    return result;
   }
 }

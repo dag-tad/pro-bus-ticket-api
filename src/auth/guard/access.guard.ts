@@ -1,7 +1,16 @@
 // access.guard.ts
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ACCESS_KEY, AccessRequirements } from 'src/decorators/access.decorator';
+import {
+  ACCESS_KEY,
+  AccessRequirements,
+} from 'src/decorators/access.decorator';
 
 @Injectable()
 export class AccessGuard implements CanActivate {
@@ -11,15 +20,22 @@ export class AccessGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     // Get access requirements from the route handler or controller
-    const requirements = this.reflector.get<AccessRequirements>(
-      ACCESS_KEY,
-      context.getHandler(),
-    );
+    const requirements =
+      this.reflector.get<AccessRequirements>(
+        ACCESS_KEY,
+        context.getHandler(),
+      ) ||
+      this.reflector.get<AccessRequirements>(ACCESS_KEY, context.getClass());
 
     // If no access requirements defined, deny access by default (secure by default)
     if (!requirements) {
-      throw new ForbiddenException('No access requirements defined for this endpoint');
+      throw new ForbiddenException(
+        'No access requirements defined for this endpoint',
+      );
     }
 
     const { realms, roles, mode = 'AND' } = requirements;
@@ -57,7 +73,8 @@ export class AccessGuard implements CanActivate {
     if (mode === 'AND') {
       hasAccess = realmValid && roleValid;
       requiredMessage = `realm in [${realms?.join(', ')}] AND role in [${roles?.join(', ')}]`;
-    } else { // OR mode
+    } else {
+      // OR mode
       hasAccess = realmValid || roleValid;
       requiredMessage = `realm in [${realms?.join(', ')}] OR role in [${roles?.join(', ')}]`;
     }
@@ -65,7 +82,7 @@ export class AccessGuard implements CanActivate {
     if (!hasAccess) {
       throw new ForbiddenException(
         `Access denied: Required ${requiredMessage}. ` +
-        `User has realm="${user.realm || 'undefined'}", role="${user.role || 'undefined'}"`
+          `User has realm="${user.realm || 'undefined'}", role="${user.role || 'undefined'}"`,
       );
     }
 
