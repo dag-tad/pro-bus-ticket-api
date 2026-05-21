@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import { ImageUploader } from './cloudinary.config';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
+import { CompanyStatus } from 'src/enums/transport-company.enum';
 
 @Injectable()
 export class TransportCompanyService {
@@ -37,12 +38,6 @@ export class TransportCompanyService {
         },
       );
     }
-
-    // const [data, totalItems] = await this.repo.findAndCount({
-    //   skip,
-    //   take: limit,
-    //   order: { createdAt: 'desc' },
-    // });
 
     const [data, totalItems] = await queryBuilder
     .orderBy(`transport_companies.${sortBy}`, sortOrder)
@@ -102,5 +97,17 @@ export class TransportCompanyService {
     } catch (error) {
       return new InternalServerErrorException(error);
     }
+  }
+
+  async updateStatus(id: string, status: CompanyStatus): Promise<{ success: boolean, message: string }> {
+    const result = await this.repo.update(id, {
+      status
+    })
+
+    if (result.affected && result.affected > 0) {
+      return { success: true, message: "'Company status updated successfully"}
+    }
+
+    return { success: false, message: "Company status update failed"}
   }
 }
