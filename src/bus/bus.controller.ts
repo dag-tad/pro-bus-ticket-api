@@ -1,12 +1,11 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { BusDTO } from 'src/dto/bus.dto';
-import { Bus } from 'src/entity/bus.entity';
+import { BusDTO } from '../dto/bus.dto';
 import { BusService } from './bus.service';
-import { AccessGuard } from 'src/auth/guard/access.guard';
-import { AccessTokenJWTGuard } from 'src/auth/guard/access-token-jwt.guard';
-import { RequireAccess } from 'src/decorators/access.decorator';
-import { REALM } from 'src/enums/realm.enum';
-import { ROLE } from 'src/enums/role.enum';
+import { AccessGuard } from '../auth/guard/access.guard';
+import { AccessTokenJWTGuard } from '../auth/guard/access-token-jwt.guard';
+import { RequireAccess } from '../decorators/access.decorator';
+import { REALM } from '../enums/realm.enum';
+import { ROLE } from '../enums/role.enum';
 
 @Controller('bus')
 @UseGuards(AccessTokenJWTGuard, AccessGuard)
@@ -25,8 +24,7 @@ export class BusController {
                 return resolve(busDto)
             })
         } catch (error) {
-            console.log(error)
-            return { message: error.message }
+            return { message: (error as Error).message }
         }
         // return this.busService.create(busDto);
     }

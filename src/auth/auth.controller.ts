@@ -8,15 +8,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDTO } from 'src/dto/loing.dto';
+import { LoginDTO } from '../dto/loing.dto';
 import { AuthService } from './auth.service';
-import { VerifyOtpDTO } from 'src/dto/verify-otp.dto';
+import { VerifyOtpDTO } from '../dto/verify-otp.dto';
 import { OTPVerifyJWTGuard } from './guard/otp-verify-jwt.guard';
 import { RefreshJwtAuthGuard } from './guard/refresh-token-jwt.guard';
 import { AccessTokenJWTGuard } from './guard/access-token-jwt.guard';
-import { ChangePasswordDto } from 'src/dto/change-password.dto';
-import { RequestResetPasswordDto } from 'src/dto/request-reset-password.dto';
-import { VerifyResetPasswordDto } from 'src/dto/verify-reset-password.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { RequestResetPasswordDto } from '../dto/request-reset-password.dto';
+import { VerifyResetPasswordDto } from '../dto/verify-reset-password.dto';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { User } from 'src/entity/user.entity';
 @Controller('auth')

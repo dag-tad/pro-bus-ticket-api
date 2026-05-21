@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Booking } from './booking.entity';
-import { RegisteredBy } from 'src/enums/registered-by.enum';
+import { RegisteredBy } from '../enums/registered-by.enum';
 
 @Entity('passengers')
 // @Index(['nationalId'])

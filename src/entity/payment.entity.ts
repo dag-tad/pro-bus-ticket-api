@@ -13,9 +13,9 @@ import {
 import { Booking } from './booking.entity';
 import { User } from './user.entity';
 import { TransportCompany } from './transport-company.entity';
-import { PaymentMethod } from 'src/enums/payment-method.enum';
-import { PaymentChannel } from 'src/enums/payment-channel.enum';
-import { PaymentStatus } from 'src/enums/payment-status.enum';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentChannel } from '../enums/payment-channel.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 @Entity('payments')
 // @Index(['transactionReference'])

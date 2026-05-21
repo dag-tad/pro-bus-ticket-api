@@ -12,7 +12,7 @@ import {
   Index 
 } from 'typeorm';
 import { TransportCompany } from './transport-company.entity';
-import { BusStatus } from 'src/enums/bus-status.enum';
+import { BusStatus } from '../enums/bus-status.enum';
 import { Trip } from './trip.entity';
 
 @Entity('buses')

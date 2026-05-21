@@ -11,8 +11,8 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Trip } from './trip.entity';
-import { BookingType } from 'src/enums/booking-type.enum';
-import { BookingStatus } from 'src/enums/booking-status.enum';
+import { BookingType } from '../enums/booking-type.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
 import { Passenger } from './passenger.entity';
 import { Payment } from './payment.entity';
 

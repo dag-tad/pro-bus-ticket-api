@@ -2,7 +2,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { TransportCompany } from './transport-company.entity';
 import { User } from './user.entity';
-import { DocumentType } from 'src/enums/document-type.enum';
+import { DocumentType } from '../enums/document-type.enum';
 
 @Entity('company_documents')
 export class CompanyDocument {
