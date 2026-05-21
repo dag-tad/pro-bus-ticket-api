@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { Bus } from './bus.entity';
 import { TransportCompany } from './transport-company.entity';
-import { TripStatus } from 'src/enums/trip-status.enum';
+import { TripStatus } from '../enums/trip-status.enum';
 import { Booking } from './booking.entity';
 
 @Entity('trips')

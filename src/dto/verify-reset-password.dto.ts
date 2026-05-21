@@ -4,7 +4,7 @@ import {
   MaxLength,
   IsNotEmpty,
 } from 'class-validator';
-import { Match } from 'src/util/match.decorator';
+import { Match } from '../util/match.decorator';
 
 export class VerifyResetPasswordDto {
   @IsString()

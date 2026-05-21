@@ -3,8 +3,8 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/entity/user.entity';
-import { UserHandler } from 'src/handlers/user.handler';
+import { User } from '../entity/user.entity';
+import { UserHandler } from '../handlers/user.handler';
 
 @Module({
   imports: [

@@ -8,7 +8,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt-strategy';
 import { RefreshJwtStrategy } from './refresh-token-jwt-strategy';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [

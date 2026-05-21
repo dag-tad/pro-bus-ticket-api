@@ -11,8 +11,8 @@ import {
 import { Payment } from './payment.entity';
 import { Booking } from './booking.entity';
 import { User } from './user.entity';
-import { RefundReason } from 'src/enums/refun-reason.enum';
-import { RefundStatus } from 'src/enums/refund-status.enum';
+import { RefundReason } from '../enums/refun-reason.enum';
+import { RefundStatus } from '../enums/refund-status.enum';
 
 @Entity('refunds')
 // @Index(['bookingId', 'status'])

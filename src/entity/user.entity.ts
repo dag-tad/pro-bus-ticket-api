@@ -10,11 +10,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Gender } from 'src/enums/gender.enum';
+import { Gender } from '../enums/gender.enum';
 import { IsOptional } from 'class-validator';
-import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
-import { REALM } from 'src/enums/realm.enum';
-import { ROLE } from 'src/enums/role.enum';
+import { NOTIFICATION_METHOD } from '../enums/notification-method.enum';
+import { REALM } from '../enums/realm.enum';
+import { ROLE } from '../enums/role.enum';
 import { Passenger } from './passenger.entity';
 
 @Entity('users')

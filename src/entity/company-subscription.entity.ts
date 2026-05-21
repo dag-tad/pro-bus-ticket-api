@@ -8,8 +8,8 @@ import {
   ManyToOne 
 } from 'typeorm';
 import { TransportCompany } from './transport-company.entity';
-import { SubscriptionPlan } from 'src/enums/subscription-plan.enum';
-import { SubscriptionStatus } from 'src/enums/subscription-status.enum';
+import { SubscriptionPlan } from '../enums/subscription-plan.enum';
+import { SubscriptionStatus } from '../enums/subscription-status.enum';
 
 @Entity('company_subscriptions')
 export class CompanySubscription {

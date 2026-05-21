@@ -6,17 +6,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoginDTO } from 'src/dto/loing.dto';
-import { User } from 'src/entity/user.entity';
+import { LoginDTO } from '../dto/loing.dto';
+import { User } from '../entity/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
-import { REDIS_CLIENT } from 'src/redis/redis.provider';
+import { REDIS_CLIENT } from '../redis/redis.provider';
 import Redis from 'ioredis';
-import { NOTIFICATION_METHOD } from 'src/enums/notification-method.enum';
-// import { AuthProducer } from 'src/rabbitmq/producer/auth.producer';
 
 export function generateOtp(length = 6): string {
   let otp = '';

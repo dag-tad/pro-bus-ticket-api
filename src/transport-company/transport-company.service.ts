@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTransportCompanyDTO } from 'src/dto/create-transport-company.dto';
-import { TransportCompany } from 'src/entity/transport-company.entity';
+import { TransportCompany } from '../entity/transport-company.entity';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import { ImageUploader } from './cloudinary.config';
