@@ -3,6 +3,9 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -15,6 +18,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -29,6 +33,7 @@ import { RequireAccess } from 'src/decorators/access.decorator';
 import { REALM } from 'src/enums/realm.enum';
 import { ROLE } from 'src/enums/role.enum';
 import { PaginationDto } from 'src/dto/pagination.dto';
+import { UpdateTransportCompanyStatusDTO } from 'src/dto/update-transport-company-status.dto';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
@@ -41,6 +46,24 @@ export class TransportCompanyController {
   @Get()
   async findAll(@Query() options: PaginationDto) {
     return await this.service.findAll(options);
+  }
+
+  @Patch(':id')
+  @RequireAccess([REALM.SUPER_ADMIN], [ROLE.ADMIN])
+  @ApiOperation({ summary: 'Update company status' })
+  @ApiBody({
+    type: UpdateTransportCompanyStatusDTO,
+  })
+  @ApiParam({ name: 'id', description: 'Company ID', type: String })
+  @ApiResponse({ status: 200, description: 'Company status updated successfully', schema: {
+    example: { success: true, message: 'Company status updated successfully' }
+  } })
+  @ApiResponse({ status: 400, description: 'Bad request', schema: {
+    example: { success: false, message: 'Company status update failed' }
+  } })
+  async updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() statusDto: UpdateTransportCompanyStatusDTO): Promise<{ success: boolean, message: string }> {
+    const { status } = statusDto
+    return await this.service.updateStatus(id, status);
   }
 
   @Post()
