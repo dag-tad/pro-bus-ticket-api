@@ -82,6 +82,7 @@ export class CreateTransportCompanyDTO {
     required: true
   })
   @IsNotEmpty()
+  @IsString()
   region: string;
 
   @ApiProperty({
@@ -90,6 +91,7 @@ export class CreateTransportCompanyDTO {
     required: true
   })
   @IsNotEmpty()
+  @IsString()
   city: string;
 
   @ApiProperty({
@@ -97,6 +99,7 @@ export class CreateTransportCompanyDTO {
     example: 'Arada',
   })
   @IsNotEmpty()
+  @IsString()
   subcity: string;
 
   @ApiProperty({
@@ -104,9 +107,30 @@ export class CreateTransportCompanyDTO {
     example: '01',
     required: false
   })
+  @IsString()
   @IsNotEmpty()
   woreda: string;
 
   @ApiProperty({ type: 'string', format: 'binary', description: 'Company logo' })
   logo: string;
+
+  // company's admin information
+  @ApiProperty({ type: 'string', description: "Admin first name", example: "Abebe", required: true})
+  @IsString()
+  @IsNotEmpty()
+  firstName: string
+
+  @ApiProperty({ type: 'string', description: "Admin last name", example: "Kebede", required: true})
+  @IsString()
+  @IsNotEmpty()
+  lastName: string
+
+  @ApiProperty({ type: 'string', description: "Admin phone number", example: "0911223344", required: true})
+  @IsString()
+  @IsNotEmpty()
+  phone: string
+
+  @ApiProperty({ type: 'string', description: "Admin email", example: "admin@company.com", required: true})
+  @IsString()
+  adminEmail: string
 }

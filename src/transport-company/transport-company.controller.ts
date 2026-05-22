@@ -34,6 +34,7 @@ import { REALM } from 'src/enums/realm.enum';
 import { ROLE } from 'src/enums/role.enum';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { UpdateTransportCompanyStatusDTO } from 'src/dto/update-transport-company-status.dto';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
@@ -102,10 +103,11 @@ export class TransportCompanyController {
     }),
   )
   async create(
+    @CurrentUser('sub') id: any,
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateTransportCompanyDTO,
   ) {
-    const result = await this.service.create(file, body);
+    const result = await this.service.create(id, file, body);
 
     return result;
   }

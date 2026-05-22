@@ -16,6 +16,7 @@ import { NOTIFICATION_METHOD } from '../enums/notification-method.enum';
 import { REALM } from '../enums/realm.enum';
 import { ROLE } from '../enums/role.enum';
 import { Passenger } from './passenger.entity';
+import { TransportCompany } from './transport-company.entity';
 
 @Entity('users')
 export class User {
@@ -49,8 +50,9 @@ export class User {
   @Exclude()
   passwordHistory: string[];
 
-  @Column()
+  @Column({ nullable: true })
   @Exclude()
+  @IsOptional()
   fanNumber: string;
 
   @Column({ type: 'boolean', default: true })
@@ -73,6 +75,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: Gender,
+    nullable: true
   })
   gender?: Gender;
 
@@ -102,6 +105,10 @@ export class User {
 
   @OneToMany(() => User, (user) => user.createdBy)
   createdUsers?: User[];
+
+  @ManyToOne(() => TransportCompany, (company) => company.id, { nullable: true })
+  // @JoinColumn({ name: 'createdById' })
+  companyId?: string;
 
   @ManyToOne(() => User, (user) => user.createdUsers, { nullable: true })
   @JoinColumn({ name: 'createdById' })

@@ -131,6 +131,9 @@ export class TransportCompany {
   @JoinColumn({ name: 'createdById' })
   createdBy: User;
 
+  @OneToMany(() => User, (user) => user.companyId)
+  users: User[]
+
   @Column({ nullable: true })
   createdById: string;
 
