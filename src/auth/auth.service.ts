@@ -3,6 +3,7 @@ import {
   HttpException,
   Inject,
   Injectable,
+  Redirect,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -37,14 +38,14 @@ export class AuthService {
   async login(
     loginDTO: LoginDTO,
   ): Promise<
-    { 'access-token': string; 'refresh-token': string } | HttpException
+    { 'access-token': string; 'refresh-token': string, success: boolean } | { success: boolean } | HttpException
   > {
     const user = await this.userRepo.findOneBy({
       phone: loginDTO.phone,
     });
 
     if (!user) {
-      throw new UnauthorizedException('Incorrect credentials. Please inter your phone number and password');
+      throw new UnauthorizedException('Incorrect credentials. Please enter your phone number and password');
     }
 
     if (!user.enabled) {
@@ -69,6 +70,10 @@ export class AuthService {
 
     const loginAttemptCount = await this.redis.incr(loginAttemptKey);
     this.redis.expire(loginAttemptKey, 180);
+
+    if (!user.passwordSet) {
+      return { success: false }
+    }
 
     const passwordMatched = await bcrypt.compare(
       loginDTO.password,
@@ -155,6 +160,7 @@ export class AuthService {
             { expiresIn: '3m' },
           ),
           'refresh-token': refreshToken,
+          success: true
         };
       }
 
@@ -165,6 +171,7 @@ export class AuthService {
       return {
         'access-token': loginToken,
         'refresh-token': refreshToken,
+        success: true
       };
     } else {
       const userBlocked = (await this.redis.get(
@@ -344,12 +351,12 @@ export class AuthService {
   }
 
   async resetPasswordRequest(
-    fanNumber: string,
+    phone: string,
   ): Promise<{ message: string } | HttpException> {
-    const user = await this.userRepo.findOneBy({ fanNumber });
+    const user = await this.userRepo.findOneBy({ phone });
 
     if (!user) {
-      return new UnauthorizedException(`${fanNumber} is not registered`);
+      return new UnauthorizedException(`${phone} is not registered`);
     }
 
     const otp = generateOtp();
@@ -386,13 +393,13 @@ export class AuthService {
 
   async VerifyResetPasswordRequest(
     password: string,
-    fanNumber: string,
+    phone: string,
     otp: string,
   ): Promise<{ message: string } | HttpException> {
-    const user = await this.userRepo.findOneBy({ fanNumber });
+    const user = await this.userRepo.findOneBy({ phone });
 
     if (!user) {
-      return new UnauthorizedException(`${fanNumber} is not registered registered FAN number`);
+      return new UnauthorizedException(`${phone} is not registered registered phone number`);
     }
 
     const savedOtp = await this.redis.get(
@@ -403,7 +410,7 @@ export class AuthService {
       return new UnauthorizedException(`OTP expired`);
     }
 
-    if (savedOtp !== otp) {
+    if (String(savedOtp) !== otp) {
       return new UnauthorizedException('Incorrect OTP');
     }
 
@@ -432,7 +439,7 @@ export class AuthService {
 
     await this.userRepo.update(
       { id: user.id },
-      { password: hashedPassword, passwordHistory: newPasswordHistory },
+      { password: hashedPassword, passwordHistory: newPasswordHistory, passwordSet: true },
     );
 
     return { message: 'your password is successfully changed' };

@@ -7,12 +7,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTransportCompanyDTO } from 'src/dto/create-transport-company.dto';
 import { TransportCompany } from '../entity/transport-company.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as fs from 'fs';
 import { ImageUploader } from './cloudinary.config';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
 import { CompanyStatus } from 'src/enums/transport-company.enum';
+import { User } from 'src/entity/user.entity';
+import { ROLE } from 'src/enums/role.enum';
+import { REALM } from 'src/enums/realm.enum';
 
 @Injectable()
 export class TransportCompanyService {
@@ -20,6 +23,7 @@ export class TransportCompanyService {
     private readonly imageUploader: ImageUploader,
     @InjectRepository(TransportCompany)
     private repo: Repository<TransportCompany>,
+    private dataSource: DataSource,
   ) {}
 
   async findAll(
@@ -40,10 +44,10 @@ export class TransportCompanyService {
     }
 
     const [data, totalItems] = await queryBuilder
-    .orderBy(`transport_companies.${sortBy}`, sortOrder)
-    .skip(skip)
-    .take(limit)
-    .getManyAndCount();
+      .orderBy(`transport_companies.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;
@@ -62,7 +66,7 @@ export class TransportCompanyService {
     };
   }
 
-  async create(file: Express.Multer.File, data: CreateTransportCompanyDTO) {
+  async create(id: string, file: Express.Multer.File, data: CreateTransportCompanyDTO) {
     try {
       const existingCompany = await this.repo.find({
         where: [
@@ -78,19 +82,43 @@ export class TransportCompanyService {
           description: 'name and licence number must be unique',
         });
       }
-      const uploadedImage = await this.imageUploader.uploadImage(file.path);
+        const uploadedImage = await this.imageUploader.uploadImage(file.path);
 
-      await fs.promises.unlink(file.path);
+        await fs.promises.unlink(file.path);
 
-      const _data = {
-        ...data,
-        logoUrl: uploadedImage.url,
-      };
-      const company = this.repo.create(_data);
+      const result = await this.dataSource.transaction(async (mgr) => {
+        const _company = new TransportCompany();
 
-      const result = await this.repo.save({
-        ...company,
-        createdAt: new Date(),
+        _company.licenseNumber = data.licenseNumber;
+        _company.name = data.name;
+        _company.tradeName = data.tradeName;
+        _company.description = data.description;
+        _company.logoUrl = uploadedImage.url;
+        _company.website = data.website;
+        _company.email = data.email;
+        _company.phoneNumber = data.phoneNumber;
+        _company.alternativePhone = data.alternativePhone;
+        _company.region = data.region;
+        _company.city = data.city;
+        _company.subcity = data.subcity;
+        _company.woreda = data.woreda;
+        _company.createdAt = new Date();
+
+        const _user = new User();
+        _user.companyId = _company.id;
+        _user.firstName = data.firstName;
+        _user.lastName = data.lastName;
+        _user.phone = data.phone;
+        _user.email = data.adminEmail;
+        _user.role = ROLE.ADMIN;
+        _user.realm = REALM.TRANSPORT_COMPANY;
+        _user.createdById = id;
+        _user.createdAt = new Date();
+
+        const savedCompany = await mgr.save(_company);
+        const savedUser = await mgr.save(_user);
+        
+        return { company: savedCompany, user: savedUser };
       });
 
       return result;
@@ -99,15 +127,18 @@ export class TransportCompanyService {
     }
   }
 
-  async updateStatus(id: string, status: CompanyStatus): Promise<{ success: boolean, message: string }> {
+  async updateStatus(
+    id: string,
+    status: CompanyStatus,
+  ): Promise<{ success: boolean; message: string }> {
     const result = await this.repo.update(id, {
-      status
-    })
+      status,
+    });
 
     if (result.affected && result.affected > 0) {
-      return { success: true, message: "'Company status updated successfully"}
+      return { success: true, message: "'Company status updated successfully" };
     }
 
-    return { success: false, message: "Company status update failed"}
+    return { success: false, message: 'Company status update failed' };
   }
 }

@@ -11,6 +11,7 @@ export class CreateUserDTO {
   lastName: string;
 
   @IsEmail()
+  @IsOptional()
   email: string;
 
   @IsString()
@@ -22,6 +23,6 @@ export class CreateUserDTO {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   fanNumber: string;
 }

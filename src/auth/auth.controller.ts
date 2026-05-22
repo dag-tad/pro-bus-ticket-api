@@ -5,6 +5,7 @@ import {
   HttpException,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -18,7 +19,6 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { RequestResetPasswordDto } from '../dto/request-reset-password.dto';
 import { VerifyResetPasswordDto } from '../dto/verify-reset-password.dto';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { User } from 'src/entity/user.entity';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -37,14 +37,26 @@ export class AuthController {
     }
   } })
   @ApiResponse({ status: 404, description: 'User not found' })
-  login(
+  async login(
     @Body() loginDTO: LoginDTO,
-  ): Promise<
-    | { 'access-token': string; 'refresh-token': string }
-    | { otpToken: string }
-    | HttpException
-  > {
-    return this.authService.login(loginDTO);
+  )
+  // : Promise<
+  //   | { 'access-token': string; 'refresh-token': string, success: boolean }
+  //   | { otpToken: string, success: boolean }
+  //   | HttpException
+  // > 
+  {
+    const result = await this.authService.login(loginDTO);
+
+    if (result instanceof HttpException) {
+      return result
+    }
+
+    if (!result.success) {
+      return { success: false, redirect: 'http://reset-page'}
+    }
+
+    return result
   }
 
   @Post('verify-otp')
@@ -95,10 +107,19 @@ export class AuthController {
   }
 
   @Post('reset-password-request')
+  @ApiOperation({ summary: 'Reset user password' })
+  @ApiBody({ type: RequestResetPasswordDto })
+  @ApiResponse({ status: 200, description: 'Success', schema: {
+    type: 'object',
+    properties: {
+      access_token: { type: 'string' },
+      refresh_token: { type: 'string' },
+    }
+  } })
   async resetPasswordRequest(
     @Body() body: RequestResetPasswordDto,
   ): Promise<{ message: string } | HttpException> {
-    return await this.authService.resetPasswordRequest(body.fanNumber);
+    return await this.authService.resetPasswordRequest(body.phone);
   }
 
   @Post('confirm-reset-password-request')
@@ -107,7 +128,7 @@ export class AuthController {
   ): Promise<{ message: string } | HttpException> {
     return await this.authService.VerifyResetPasswordRequest(
       body.newPassword,
-      body.fanNumber,
+      body.phone,
       body.otp,
     );
   }
