@@ -1,78 +1,71 @@
-// bus.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
   OneToMany,
   ManyToMany,
   JoinTable,
-  Index 
+  Index,
+  JoinColumn
 } from 'typeorm';
 import { TransportCompany } from './transport-company.entity';
 import { BusStatus } from '../enums/bus-status.enum';
 import { Trip } from './trip.entity';
+import { BusModel } from './bus-model.entity';
+
+export type SeatCell = {
+  type: 'seat' | 'aisle' | 'door' | 'restRoom';
+  seatNumber: number | string | null;
+}
 
 @Entity('buses')
 export class Bus {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  plateNumber: string; // plate number
+  @Column({ nullable: false })
+  companyId: string;
 
   @Column()
-  model: string; // e.g., "Toyota Coaster", "Hyundai Universe"
+  busModelId: string;
 
-  @Column()
-  manufacturer: string; // e.g., "Toyota", "Hyundai", "Isuzu"
+  @Column({ unique: true, nullable: false })
+  plateNumber: string;
 
-  @Column()
-  yearOfManufacture: number;
-
-  @Column()
-  totalSeats: number;
-
-  @Column({ type: 'json', nullable: true })
-  seats: string[]
+  @Column({ nullable: false })
+  busNumber: string;
 
   @Column({
     type: 'enum',
     enum: BusStatus,
-    default: BusStatus.ACTIVE
+    default: BusStatus.ACTIVE,
   })
-  status: BusStatus; // ACTIVE, MAINTENANCE, RETIRED
+  status: BusStatus;
 
   @Column({ type: 'json', nullable: true })
-  amenities: {
-    tv: boolean;
-    wifi: boolean;
-    restRoom: boolean;
-    powerOutlate: boolean;
-    ac: boolean;
-  }
-
-  @Column({ nullable: true })
-  baggageCapacity: string; // e.g., "50kg per passenger"
-
-  @Column({ type: 'text', nullable: true })
-  notes: string; // Additional notes about the bus
-
-  // Relations
-  @ManyToOne(() => TransportCompany, company => company.buses)
-  company: TransportCompany;
-
-  @Column()
-  companyId: string;
-
-  @OneToMany(() => Trip, trip => trip.bus)
-  trips: Trip[];
+  seatLayout: object;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relationships
+  @ManyToOne(() => BusModel, (busModel: BusModel) => busModel.buses)
+  @JoinColumn({ name: 'busModelId' })
+  model: BusModel;
+  
+  @ManyToOne(() => TransportCompany, (company) => company.buses)
+  @JoinColumn({ name: 'companyId' })
+  company: TransportCompany;
+
+  @OneToMany(() => Trip, (trip) => trip.bus)
+  trips: Trip[];
 }

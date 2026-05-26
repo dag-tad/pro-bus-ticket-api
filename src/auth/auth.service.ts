@@ -15,7 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { randomInt, randomBytes } from 'crypto';
 import { REDIS_CLIENT } from '../redis/redis.provider';
-import {Redis} from '@upstash/redis';
+import { Redis } from '@upstash/redis';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -33,19 +33,23 @@ export class AuthService {
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
     // private readonly authProducer: AuthProducer
-  ) { }
+  ) {}
 
   async login(
     loginDTO: LoginDTO,
   ): Promise<
-    { 'access-token': string; 'refresh-token': string, success: boolean } | { success: boolean } | HttpException
+    | { 'access-token': string; 'refresh-token': string; success: boolean }
+    | { success: boolean }
+    | HttpException
   > {
     const user = await this.userRepo.findOneBy({
       phone: loginDTO.phone,
     });
 
     if (!user) {
-      throw new UnauthorizedException('Incorrect credentials. Please enter your phone number and password');
+      throw new UnauthorizedException(
+        'Incorrect credentials. Please enter your phone number and password',
+      );
     }
 
     if (!user.enabled) {
@@ -72,7 +76,7 @@ export class AuthService {
     this.redis.expire(loginAttemptKey, 180);
 
     if (!user.passwordSet) {
-      return { success: false }
+      return { success: false };
     }
 
     const passwordMatched = await bcrypt.compare(
@@ -116,8 +120,8 @@ export class AuthService {
         `auth:refresh-token:user:${sub}`,
         refreshToken,
         {
-          ex: 604800
-        }
+          ex: 604800,
+        },
         // 'EX',
         // 604800,
       );
@@ -126,30 +130,41 @@ export class AuthService {
         const otp = generateOtp();
 
         // save access-token on redis
-        await this.redis.set(
-          `auth:access-token:user:${sub}`,
-          loginToken,
-          {
-            ex: 500
-          }
-        );
+        await this.redis.set(`auth:access-token:user:${sub}`, loginToken, {
+          ex: 500,
+        });
 
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, { ex: 300 });
-
+        const url = process.env.SMS_URL!;
+        const sender_short_code = process.env.SMS_SHORT_CODE!;
+        const message = `Your one time password is ${otp}. Use this to login`;
+        await axios.post(
+          url,
+          {
+            sender: sender_short_code,
+            to: user.phone,
+            message,
+          },
+          {
+            headers: {
+              Authorization: process.env.SMS_AUTHORIZATION,
+            },
+          },
+        );
         // const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
         // const message = `Your One time password is ${otp}`
         // try {
-          // await this.authProducer.publishLoginSuccess({
-          //   type: 'otp',
-          //   otp, 
-          //   name: `${user.firstName} ${user.lastName}`,
-          //   medium: user.notificationMethod,
-          //   to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
-          //   message
-          // }, {
-          //   routingKey 
-          // });
+        // await this.authProducer.publishLoginSuccess({
+        //   type: 'otp',
+        //   otp,
+        //   name: `${user.firstName} ${user.lastName}`,
+        //   medium: user.notificationMethod,
+        //   to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
+        //   message
+        // }, {
+        //   routingKey
+        // });
         // } catch (error) {
         //   console.error(error)
         // }
@@ -160,7 +175,7 @@ export class AuthService {
             { expiresIn: '3m' },
           ),
           'refresh-token': refreshToken,
-          success: true
+          success: true,
         };
       }
 
@@ -171,7 +186,7 @@ export class AuthService {
       return {
         'access-token': loginToken,
         'refresh-token': refreshToken,
-        success: true
+        success: true,
       };
     } else {
       const userBlocked = (await this.redis.get(
@@ -211,9 +226,9 @@ export class AuthService {
   async verifyOTP(
     userId: string,
     otp: number,
-  ): Promise<{ 'access-token': string } | HttpException> {
+  ): Promise<{ 'access-token': string, 'refresh-token': string } | HttpException> {
     const savedOtp = await this.redis.get(`auth:otp:user:${userId}`);
-
+const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
     if (!savedOtp) {
       return new UnauthorizedException();
     }
@@ -233,7 +248,7 @@ export class AuthService {
     await this.redis.del(`auth:otp:user:${userId}`);
     await this.redis.del(`auth:access-token:user:${userId}`);
 
-    return { 'access-token': savedAccessToken as string };
+    return { 'access-token': savedAccessToken as string, 'refresh-token': refreshToken as string };
   }
 
   async findOne(email: string): Promise<User> {
@@ -290,11 +305,9 @@ export class AuthService {
     );
 
     // save refresh-token on redis
-    await this.redis.set(
-      `auth:refresh-token:user:${sub}`,
-      refreshToken,
-      { ex: 604800 }
-    );
+    await this.redis.set(`auth:refresh-token:user:${sub}`, refreshToken, {
+      ex: 604800,
+    });
 
     return { 'refresh-token': refreshToken, 'access-token': accessToken };
   }
@@ -365,13 +378,9 @@ export class AuthService {
     const message = `Your one time password is ${otp}. Use this to reset your password`;
 
     // save otp on redis
-    await this.redis.set(
-      `auth:reset-password-otp:user:${user.id}`,
-      otp,
-      {
-        ex: 300
-      }
-    );
+    await this.redis.set(`auth:reset-password-otp:user:${user.id}`, otp, {
+      ex: 300,
+    });
 
     // this should be removed from here and be included in the notification service
     await axios.post(
@@ -399,7 +408,9 @@ export class AuthService {
     const user = await this.userRepo.findOneBy({ phone });
 
     if (!user) {
-      return new UnauthorizedException(`${phone} is not registered registered phone number`);
+      return new UnauthorizedException(
+        `${phone} is not registered registered phone number`,
+      );
     }
 
     const savedOtp = await this.redis.get(
@@ -439,7 +450,11 @@ export class AuthService {
 
     await this.userRepo.update(
       { id: user.id },
-      { password: hashedPassword, passwordHistory: newPasswordHistory, passwordSet: true },
+      {
+        password: hashedPassword,
+        passwordHistory: newPasswordHistory,
+        passwordSet: true,
+      },
     );
 
     return { message: 'your password is successfully changed' };

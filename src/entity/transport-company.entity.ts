@@ -1,4 +1,5 @@
-// transport-company.entity.ts
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import {
   Entity,
   Column,
@@ -20,6 +21,7 @@ import { Trip } from './trip.entity';
 import { CompanyRating } from './company-rating.entity';
 import { CancellationPolicy } from './cancellation-policy.entity';
 import { CompanyDocument } from './document.entity';
+import { BusModel_Company } from './bus-model_company.entity';
 
 @Entity('transport_companies')
 // @Index(['name', 'status'])
@@ -127,12 +129,15 @@ export class TransportCompany {
   };
 
   // Relations
+  @OneToMany(() => BusModel_Company, (link) => link.company)
+  busModelLinks: BusModel_Company[];
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'createdById' })
   createdBy: User;
 
   @OneToMany(() => User, (user) => user.companyId)
-  users: User[]
+  users: User[];
 
   @Column({ nullable: true })
   createdById: string;
@@ -154,6 +159,8 @@ export class TransportCompany {
   @Column({ nullable: true })
   approvedById: string;
 
+  @OneToMany(() => BusModel_Company, (link) => link.company)
+  busModelLinks: BusModel_Company[];
   // @OneToMany(() => CompanyBankAccount, bankAccount => bankAccount.company)
   // bankAccounts: CompanyBankAccount[];
 
@@ -182,93 +189,93 @@ export class TransportCompany {
   lastActiveAt: Date;
 
   // Virtual properties (not stored in DB, calculated from relations)
-  get totalRevenue(): Promise<number> {
-    return this.calculateTotalRevenue();
-  }
+  // get totalRevenue(): Promise<number> {
+  //   return this.calculateTotalRevenue();
+  // }
 
-  get totalPayout(): Promise<number> {
-    return this.calculateTotalPayout();
-  }
+  // get totalPayout(): Promise<number> {
+  //   return this.calculateTotalPayout();
+  // }
 
-  get pendingPayout(): Promise<number> {
-    return this.calculatePendingPayout();
-  }
+  // get pendingPayout(): Promise<number> {
+  //   return this.calculatePendingPayout();
+  // }
 
-  get totalBuses(): Promise<number> {
-    return this.calculateTotalBuses();
-  }
+  // get totalBuses(): Promise<number> {
+  //   return this.calculateTotalBuses();
+  // }
 
-  get totalStaff(): Promise<number> {
-    return this.calculateTotalStaff();
-  }
+  // get totalStaff(): Promise<number> {
+  //   return this.calculateTotalStaff();
+  // }
 
-  get activeRoutes(): Promise<number> {
-    return this.calculateActiveRoutes();
-  }
+  // get activeRoutes(): Promise<number> {
+  //   return this.calculateActiveRoutes();
+  // }
 
-  get averageRating(): Promise<number> {
-    return this.calculateAverageRating();
-  }
+  // get averageRating(): Promise<number> {
+  //   return this.calculateAverageRating();
+  // }
 
-  get totalRatings(): Promise<number> {
-    return this.calculateTotalRatings();
-  }
+  // get totalRatings(): Promise<number> {
+  //   return this.calculateTotalRatings();
+  // }
 
   // Helper methods for calculations
-  private async calculateTotalRevenue(): Promise<number> {
-    // Aggregate from payouts table
-    // const result = await someRepository.sum('totalBookingAmount', { companyId: this.id });
-    return 0; // result || 0;
-  }
+  // private async calculateTotalRevenue(): Promise<number> {
+  // Aggregate from payouts table
+  // const result = await someRepository.sum('totalBookingAmount', { companyId: this.id });
+  //   return 0; // result || 0;
+  // }
 
-  private async calculateTotalPayout(): Promise<number> {
-    // Aggregate from payouts table where status = COMPLETED
-    // const result = await someRepository.sum('netAmount', {
-    //   companyId: this.id,
-    //   status: 'COMPLETED'
-    // });
-    return 0; // result || 0;
-  }
+  // private async calculateTotalPayout(): Promise<number> {
+  //   // Aggregate from payouts table where status = COMPLETED
+  //   // const result = await someRepository.sum('netAmount', {
+  //   //   companyId: this.id,
+  //   //   status: 'COMPLETED'
+  //   // });
+  //   return 0; // result || 0;
+  // }
 
-  private async calculatePendingPayout(): Promise<number> {
-    // Aggregate from payouts table where status = PENDING or PROCESSING
-    // const result = await someRepository.sum('netAmount', {
-    //   companyId: this.id,
-    //   status: In(['PENDING', 'PROCESSING'])
-    // });
-    return 0; // result || 0;
-  }
+  // private async calculatePendingPayout(): Promise<number> {
+  //   // Aggregate from payouts table where status = PENDING or PROCESSING
+  //   // const result = await someRepository.sum('netAmount', {
+  //   //   companyId: this.id,
+  //   //   status: In(['PENDING', 'PROCESSING'])
+  //   // });
+  //   return 0; // result || 0;
+  // }
 
-  private async calculateTotalBuses(): Promise<number> {
-    return 0; // await someRepository.count({ where: { companyId: this.id } });
-  }
+  // private async calculateTotalBuses(): Promise<number> {
+  //   return 0; // await someRepository.count({ where: { companyId: this.id } });
+  // }
 
-  private async calculateTotalStaff(): Promise<number> {
-    return 0;
-    //  await someRepository.count({
-    //   where: {
-    //     companyId: this.id,
-    //     role: In(['COMPANY_ADMIN', 'DRIVER', 'CONDUCTOR'])
-    //   }
-    // });
-  }
+  // private async calculateTotalStaff(): Promise<number> {
+  //   return 0;
+  //   //  await someRepository.count({
+  //   //   where: {
+  //   //     companyId: this.id,
+  //   //     role: In(['COMPANY_ADMIN', 'DRIVER', 'CONDUCTOR'])
+  //   //   }
+  //   // });
+  // }
 
-  private async calculateActiveRoutes(): Promise<number> {
-    // Count distinct routes from trips
-    // const result = await someRepository.query(
-    //   `SELECT COUNT(DISTINCT CONCAT(origin_city, '-', destination_city))
-    //    FROM trips WHERE company_id = $1 AND status = 'SCHEDULED'`,
-    //   [this.id]
-    // );
-    return 0; // parseInt(result[0].count) || 0;
-  }
+  // private async calculateActiveRoutes(): Promise<number> {
+  //   // Count distinct routes from trips
+  //   // const result = await someRepository.query(
+  //   //   `SELECT COUNT(DISTINCT CONCAT(origin_city, '-', destination_city))
+  //   //    FROM trips WHERE company_id = $1 AND status = 'SCHEDULED'`,
+  //   //   [this.id]
+  //   // );
+  //   return 0; // parseInt(result[0].count) || 0;
+  // }
 
-  private async calculateAverageRating(): Promise<number> {
-    const result = 0; // await someRepository.average('rating', { companyId: this.id });
-    return result || 0;
-  }
+  // private async calculateAverageRating(): Promise<number> {
+  //   const result = 0; // await someRepository.average('rating', { companyId: this.id });
+  //   return result || 0;
+  // }
 
-  private async calculateTotalRatings(): Promise<number> {
-    return await 0; // someRepository.count({ where: { companyId: this.id } });
-  }
+  // private async calculateTotalRatings(): Promise<number> {
+  //   return await 0; // someRepository.count({ where: { companyId: this.id } });
+  // }
 }
