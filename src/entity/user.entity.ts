@@ -17,6 +17,7 @@ import { REALM } from '../enums/realm.enum';
 import { ROLE } from '../enums/role.enum';
 import { Passenger } from './passenger.entity';
 import { TransportCompany } from './transport-company.entity';
+import { City } from './cities.entity';
 
 @Entity('users')
 export class User {
@@ -116,4 +117,10 @@ export class User {
 
   @OneToOne(() => Passenger, passenger => passenger.user, { cascade: true })
   passenger: Passenger;
+
+  @OneToMany(() => City, (city) => city.createdByUser)
+  createdCities: City[];
+
+  @OneToMany(() => City, (city) => city.updatedByUser)
+  updatedCities: City[];
 }
