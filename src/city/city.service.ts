@@ -42,7 +42,7 @@ export class CityService {
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;
     const hasPreviousPage = page! > 1;
-console.log(sortBy)
+
     return {
       data,
       meta: {
