@@ -11,6 +11,7 @@ async function bootstrap() {
       'http://localhost:3001',  // Your Next.js app
       // 'http://localhost:3000',  // For testing
       'https://pro-bus-ticket-ei1wws7vq-dag-tads-projects.vercel.app/', 
+      'https://pro-bus-ticket-ei1wws7vq-dag-tads-projects.vercel.app/'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
