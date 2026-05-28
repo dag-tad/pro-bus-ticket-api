@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { AddressDTO } from './shared.dto';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTransportCompanyDTO {
   @ApiProperty({

@@ -14,6 +14,7 @@ import { AccessGuard } from './auth/guard/access.guard';
 import { TransportCompanyService } from './transport-company/transport-company.service';
 import { TransportCompanyController } from './transport-company/transport-company.controller';
 import { TransportCompanyModule } from './transport-company/transport-company.module';
+import { CityModule } from './city/city.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TransportCompanyModule } from './transport-company/transport-company.mo
       }),
     }),
     TransportCompanyModule,
+    CityModule,
   ],
   controllers: [AppController,],
   providers: [AppService,],
