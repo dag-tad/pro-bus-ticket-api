@@ -102,7 +102,7 @@ export class AuthService {
           jti,
           purpose: 'refreshToken',
         },
-        { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET },
+        { expiresIn: '2m', secret: process.env.JWT_REFRESH_SECRET }, // 7d
       );
 
       const loginToken = this.jwtService.sign(
@@ -111,7 +111,7 @@ export class AuthService {
           ...payload,
           purpose: 'accessToken',
         },
-        { expiresIn: '60m' },
+        { expiresIn: '1m' },
       );
 
       // save refreshToken on redis.
@@ -151,22 +151,6 @@ export class AuthService {
             },
           },
         );
-        // const routingKey = 'otp.send'; // user.notificationMethod === NOTIFICATION_METHOD.SMS ? 'notification.sms.send' : 'notification.email.send'
-        // const message = `Your One time password is ${otp}`
-        // try {
-        // await this.authProducer.publishLoginSuccess({
-        //   type: 'otp',
-        //   otp,
-        //   name: `${user.firstName} ${user.lastName}`,
-        //   medium: user.notificationMethod,
-        //   to: user.notificationMethod === NOTIFICATION_METHOD.SMS ? user.phone : user.email,
-        //   message
-        // }, {
-        //   routingKey
-        // });
-        // } catch (error) {
-        //   console.error(error)
-        // }
 
         return {
           accessToken: this.jwtService.sign(
