@@ -23,11 +23,11 @@ export class RefreshJwtStrategy extends PassportStrategy(
   async validate(payload: any) {
     const { sub, purpose } = payload;
 
-    if (purpose !== 'refresh-token') {
+    if (purpose !== 'refreshToken') {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const redisKey = `auth:refresh-token:user:${sub}`;
+    const redisKey = `auth:refreshToken:user:${sub}`;
 
     const exists = await this.redis.get(redisKey);
 

@@ -42,7 +42,7 @@ async function bootstrap() {
         bearerFormat: 'JWT',
         in: 'header',
       },
-      'access-token',
+      'accessToken',
     )
     .build();
 

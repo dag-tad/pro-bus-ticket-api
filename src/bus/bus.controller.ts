@@ -5,13 +5,19 @@ import { AccessTokenJWTGuard } from '../auth/guard/access-token-jwt.guard';
 import { RequireAccess } from '../decorators/access.decorator';
 import { REALM } from '../enums/realm.enum';
 import { ROLE } from '../enums/role.enum';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateBusModelDTO } from 'src/dto/bus-model.dto';
 import { CreateBusDTO } from 'src/dto/create-bus.dto';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 
 @ApiTags('bus')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('accessToken')
 @Controller('bus')
 @UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class BusController {
@@ -24,7 +30,7 @@ export class BusController {
   @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
   @Post('model/create')
   async createBusModel(@Body() model: CreateBusModelDTO): Promise<any> {
-    return this.busService.createBusModel(model)
+    return this.busService.createBusModel(model);
   }
 
   @Post('create')
@@ -40,6 +46,6 @@ export class BusController {
     @CurrentUser('sub') id: any,
     @Body() data: CreateBusDTO,
   ) {
-    return await this.busService.create(data)
+    return await this.busService.create(data);
   }
 }

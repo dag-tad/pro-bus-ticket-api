@@ -38,7 +38,7 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('accessToken')
 @UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class TransportCompanyController {
   constructor(private readonly service: TransportCompanyService) {}
@@ -56,14 +56,28 @@ export class TransportCompanyController {
     type: UpdateTransportCompanyStatusDTO,
   })
   @ApiParam({ name: 'id', description: 'Company ID', type: String })
-  @ApiResponse({ status: 200, description: 'Company status updated successfully', schema: {
-    example: { success: true, message: 'Company status updated successfully' }
-  } })
-  @ApiResponse({ status: 400, description: 'Bad request', schema: {
-    example: { success: false, message: 'Company status update failed' }
-  } })
-  async updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() statusDto: UpdateTransportCompanyStatusDTO): Promise<{ success: boolean, message: string }> {
-    const { status } = statusDto
+  @ApiResponse({
+    status: 200,
+    description: 'Company status updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Company status updated successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: { success: false, message: 'Company status update failed' },
+    },
+  })
+  async updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() statusDto: UpdateTransportCompanyStatusDTO,
+  ): Promise<{ success: boolean; message: string }> {
+    const { status } = statusDto;
     return await this.service.updateStatus(id, status);
   }
 
