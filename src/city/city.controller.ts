@@ -26,7 +26,7 @@ import { AccessGuard } from 'src/auth/guard/access.guard';
 import { PaginationDto } from 'src/dto/pagination.dto';
 
 @ApiTags('City')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('accessToken')
 @Controller('cities')
 export class CityController {
   constructor(private service: CityService) {}

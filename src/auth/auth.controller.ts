@@ -29,34 +29,35 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Authenticate user' })
   @ApiBody({ type: LoginDTO })
-  @ApiResponse({ status: 200, description: 'Success', schema: {
-    type: 'object',
-    properties: {
-      access_token: { type: 'string' },
-      refresh_token: { type: 'string' },
-    }
-  } })
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: { type: 'string' },
+        refresh_token: { type: 'string' },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async login(
-    @Body() loginDTO: LoginDTO,
-  )
-  // : Promise<
-  //   | { 'access-token': string; 'refresh-token': string, success: boolean }
-  //   | { otpToken: string, success: boolean }
-  //   | HttpException
-  // > 
-  {
+  async login(@Body() loginDTO: LoginDTO) {
+    // : Promise<
+    //   | { 'accessToken': string; 'refreshToken': string, success: boolean }
+    //   | { otpToken: string, success: boolean }
+    //   | HttpException
+    // >
     const result = await this.authService.login(loginDTO);
 
     if (result instanceof HttpException) {
-      return result
+      return result;
     }
 
     if (!result.success) {
-      return { success: false, redirect: 'http://reset-page'}
+      return { success: false, redirect: 'http://reset-page' };
     }
 
-    return result
+    return result;
   }
 
   @Post('verify-otp')
@@ -65,19 +66,19 @@ export class AuthController {
     @Headers('authorization') authHeader: string,
     @Body() otpDto: VerifyOtpDTO,
     @Req() req,
-  ): Promise<{ 'access-token': string } | HttpException> {
+  ): Promise<{ accessToken: string } | HttpException> {
     const { sub } = req.user;
-
-    return await this.authService.verifyOTP(sub, otpDto.otp);
+    const result = await this.authService.verifyOTP(sub, otpDto.otp);
+    
+    console.log(result)
+    return result
   }
 
-  @Post('refresh-token')
+  @Post('refreshToken')
   @UseGuards(RefreshJwtAuthGuard)
   async refreshToken(
     @Req() req,
-  ): Promise<
-    { 'access-token': string; 'refresh-token': string } | HttpException
-  > {
+  ): Promise<{ accessToken: string; refreshToken: string } | HttpException> {
     const { sub } = req.user;
 
     return await this.authService.refreshToken(sub);
@@ -109,13 +110,17 @@ export class AuthController {
   @Post('reset-password-request')
   @ApiOperation({ summary: 'Reset user password' })
   @ApiBody({ type: RequestResetPasswordDto })
-  @ApiResponse({ status: 200, description: 'Success', schema: {
-    type: 'object',
-    properties: {
-      access_token: { type: 'string' },
-      refresh_token: { type: 'string' },
-    }
-  } })
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: { type: 'string' },
+        refresh_token: { type: 'string' },
+      },
+    },
+  })
   async resetPasswordRequest(
     @Body() body: RequestResetPasswordDto,
   ): Promise<{ message: string } | HttpException> {

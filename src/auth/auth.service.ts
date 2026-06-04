@@ -3,7 +3,6 @@ import {
   HttpException,
   Inject,
   Injectable,
-  Redirect,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -38,7 +37,7 @@ export class AuthService {
   async login(
     loginDTO: LoginDTO,
   ): Promise<
-    | { 'access-token': string; 'refresh-token': string; success: boolean }
+    | { accessToken: string; refreshToken: string; success: boolean }
     | { success: boolean }
     | HttpException
   > {
@@ -101,7 +100,7 @@ export class AuthService {
         {
           sub,
           jti,
-          purpose: 'refresh-token',
+          purpose: 'refreshToken',
         },
         { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET },
       );
@@ -110,14 +109,14 @@ export class AuthService {
         {
           sub,
           ...payload,
-          purpose: 'access-token',
+          purpose: 'accessToken',
         },
         { expiresIn: '60m' },
       );
 
-      // save refresh-token on redis.
+      // save refreshToken on redis.
       await this.redis.set(
-        `auth:refresh-token:user:${sub}`,
+        `auth:refreshToken:user:${sub}`,
         refreshToken,
         {
           ex: 604800,
@@ -129,8 +128,8 @@ export class AuthService {
       if (user.enable2FA) {
         const otp = generateOtp();
 
-        // save access-token on redis
-        await this.redis.set(`auth:access-token:user:${sub}`, loginToken, {
+        // save accessToken on redis
+        await this.redis.set(`auth:accessToken:user:${sub}`, loginToken, {
           ex: 500,
         });
 
@@ -170,11 +169,11 @@ export class AuthService {
         // }
 
         return {
-          'access-token': this.jwtService.sign(
+          accessToken: this.jwtService.sign(
             { sub, purpose: 'otp' },
             { expiresIn: '3m' },
           ),
-          'refresh-token': refreshToken,
+          refreshToken: refreshToken,
           success: true,
         };
       }
@@ -184,8 +183,8 @@ export class AuthService {
       await this.redis.del(blockUserKey);
 
       return {
-        'access-token': loginToken,
-        'refresh-token': refreshToken,
+        accessToken: loginToken,
+        refreshToken: refreshToken,
         success: true,
       };
     } else {
@@ -211,7 +210,7 @@ export class AuthService {
         );
 
         throw new UnauthorizedException(
-          'You account has been blocked. Please contact the administrator.',
+          'Your account has been blocked. Please contact the administrator.',
         );
       }
 
@@ -226,9 +225,11 @@ export class AuthService {
   async verifyOTP(
     userId: string,
     otp: number,
-  ): Promise<{ 'access-token': string, 'refresh-token': string } | HttpException> {
+  ): Promise<{ accessToken: string; refreshToken: string } | HttpException> {
     const savedOtp = await this.redis.get(`auth:otp:user:${userId}`);
-const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
+    const refreshToken = await this.redis.get(
+      `auth:refreshToken:user:${userId}`,
+    );
     if (!savedOtp) {
       return new UnauthorizedException();
     }
@@ -238,7 +239,7 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
     }
 
     const savedAccessToken = await this.redis.get(
-      `auth:access-token:user:${userId}`,
+      `auth:accessToken:user:${userId}`,
     );
 
     if (!savedAccessToken) {
@@ -246,9 +247,12 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
     }
 
     await this.redis.del(`auth:otp:user:${userId}`);
-    await this.redis.del(`auth:access-token:user:${userId}`);
+    await this.redis.del(`auth:accessToken:user:${userId}`);
 
-    return { 'access-token': savedAccessToken as string, 'refresh-token': refreshToken as string };
+    return {
+      accessToken: savedAccessToken as string,
+      refreshToken: refreshToken as string,
+    };
   }
 
   async findOne(email: string): Promise<User> {
@@ -265,9 +269,7 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
 
   async refreshToken(
     id: string,
-  ): Promise<
-    { 'access-token': string; 'refresh-token': string } | HttpException
-  > {
+  ): Promise<{ accessToken: string; refreshToken: string } | HttpException> {
     const user = await this.userRepo.findOneBy({ id });
 
     if (!user) {
@@ -290,7 +292,7 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
       {
         sub,
         jti,
-        purpose: 'refresh-token',
+        purpose: 'refreshToken',
       },
       { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET },
     );
@@ -299,17 +301,17 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
       {
         sub,
         ...payload,
-        purpose: 'access-token',
+        purpose: 'accessToken',
       },
       { expiresIn: '5m' },
     );
 
-    // save refresh-token on redis
-    await this.redis.set(`auth:refresh-token:user:${sub}`, refreshToken, {
+    // save refreshToken on redis
+    await this.redis.set(`auth:refreshToken:user:${sub}`, refreshToken, {
       ex: 604800,
     });
 
-    return { 'refresh-token': refreshToken, 'access-token': accessToken };
+    return { refreshToken: refreshToken, accessToken: accessToken };
   }
 
   async changePassword(
@@ -461,7 +463,7 @@ const refreshToken = await this.redis.get(`auth:refresh-token:user:${userId}`)
   }
 
   async logout(id: string): Promise<{ message: string }> {
-    await this.redis.del(`auth:refresh-token:user:${id}`);
+    await this.redis.del(`auth:refreshToken:user:${id}`);
 
     return { message: 'signed out successfully.' };
   }
