@@ -39,11 +39,11 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 @ApiTags('transport-company')
 @Controller('transport-company')
 @ApiBearerAuth('accessToken')
-@UseGuards(AccessTokenJWTGuard, AccessGuard)
+// @UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class TransportCompanyController {
   constructor(private readonly service: TransportCompanyService) {}
 
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  // @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
   @Get()
   async findAll(@Query() options: PaginationDto) {
     return await this.service.findAll(options);

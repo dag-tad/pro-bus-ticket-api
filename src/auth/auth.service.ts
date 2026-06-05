@@ -102,7 +102,7 @@ export class AuthService {
           jti,
           purpose: 'refreshToken',
         },
-        { expiresIn: '2m', secret: process.env.JWT_REFRESH_SECRET }, // 7d
+        { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET }, // 7d
       );
 
       const loginToken = this.jwtService.sign(
@@ -111,7 +111,7 @@ export class AuthService {
           ...payload,
           purpose: 'accessToken',
         },
-        { expiresIn: '1m' },
+        { expiresIn: '1h' },
       );
 
       // save refreshToken on redis.
