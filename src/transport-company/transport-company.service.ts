@@ -34,7 +34,9 @@ export class TransportCompanyService {
 
     const queryBuilder = this.repo.createQueryBuilder('transport_companies');
 
-    if (search) {
+    queryBuilder.leftJoinAndSelect('transport_companies.users', 'users');
+
+    if (search !== 'undefined') {
       queryBuilder.where(
         'transport_companies.name ILIKE :search OR transport_companies.tradeName ILIKE :search',
         {
