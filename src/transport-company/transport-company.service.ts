@@ -16,6 +16,9 @@ import { CompanyStatus } from 'src/enums/transport-company.enum';
 import { User } from 'src/entity/user.entity';
 import { ROLE } from 'src/enums/role.enum';
 import { REALM } from 'src/enums/realm.enum';
+import { generateOtp } from 'src/auth/auth.service';
+import * as bcrypt from 'bcrypt';
+import { sendSMS } from 'src/util/send-message';
 
 @Injectable()
 export class TransportCompanyService {
@@ -29,27 +32,27 @@ export class TransportCompanyService {
   async findAll(
     @Query() options: PaginationDto,
   ): Promise<PaginatedResponse<TransportCompany>> {
-    const { page, limit, search, sortBy, sortOrder } = options;
-    const skip = (page! - 1) * limit!;
+    const { page = 1, limit = 10, search, sortBy, sortOrder } = options;
+    const skip = (page - 1) * limit;
 
     const queryBuilder = this.repo.createQueryBuilder('transport_companies');
 
-    queryBuilder.leftJoinAndSelect('transport_companies.users', 'users');
-
-    if (search !== 'undefined') {
+    if (search) {
       queryBuilder.where(
-        'transport_companies.name ILIKE :search OR transport_companies.tradeName ILIKE :search',
-        {
-          search: `%${search}%`,
-        },
+        `transport_companies.name ILIKE :search OR transport_companies.tradeName ILIKE :search`,
+        { search: `%${search}%` },
       );
     }
+
+    queryBuilder.leftJoinAndSelect('transport_companies.users', 'users');
 
     const [data, totalItems] = await queryBuilder
       .orderBy(`transport_companies.${sortBy}`, sortOrder)
       .skip(skip)
       .take(limit)
       .getManyAndCount();
+
+    console.log(search);
 
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;
@@ -68,7 +71,11 @@ export class TransportCompanyService {
     };
   }
 
-  async create(id: string, file: Express.Multer.File, data: CreateTransportCompanyDTO) {
+  async create(
+    id: string,
+    file: Express.Multer.File,
+    data: CreateTransportCompanyDTO,
+  ) {
     try {
       const existingCompany = await this.repo.find({
         where: [
@@ -84,12 +91,13 @@ export class TransportCompanyService {
           description: 'name and licence number must be unique',
         });
       }
-        const uploadedImage = await this.imageUploader.uploadImage(file.path);
+      const uploadedImage = await this.imageUploader.uploadImage(file.path);
 
-        await fs.promises.unlink(file.path);
+      await fs.promises.unlink(file.path);
 
       const result = await this.dataSource.transaction(async (mgr) => {
         const _company = new TransportCompany();
+        const otp = generateOtp();
 
         _company.licenseNumber = data.licenseNumber;
         _company.name = data.name;
@@ -106,6 +114,14 @@ export class TransportCompanyService {
         _company.woreda = data.woreda;
         _company.createdAt = new Date();
 
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(otp.toString(), salt);
+
+        const passwordHistory = [hashedPassword].slice(
+          0,
+          parseInt(process.env.MAX_PASSWORD_HISTORY || '7'),
+        );
+
         const _user = new User();
         _user.companyId = _company.id;
         _user.firstName = data.firstName;
@@ -116,10 +132,17 @@ export class TransportCompanyService {
         _user.realm = REALM.TRANSPORT_COMPANY;
         _user.createdById = id;
         _user.createdAt = new Date();
+        _user.password = hashedPassword;
+        _user.passwordHistory = passwordHistory;
 
         const savedCompany = await mgr.save(_company);
         const savedUser = await mgr.save(_user);
-        
+
+        sendSMS(
+          _user.phone,
+          `Dear ${_user.firstName} ${_user.lastName}. Your password is ${otp.toString()}. Please login to our system and change your password before doing anything. `,
+        );
+
         return { company: savedCompany, user: savedUser };
       });
 
