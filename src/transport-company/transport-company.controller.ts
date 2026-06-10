@@ -35,17 +35,18 @@ import { ROLE } from 'src/enums/role.enum';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { UpdateTransportCompanyStatusDTO } from 'src/dto/update-transport-company-status.dto';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
 @ApiBearerAuth('accessToken')
-// @UseGuards(AccessTokenJWTGuard, AccessGuard)
+@UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class TransportCompanyController {
   constructor(private readonly service: TransportCompanyService) {}
 
-  // @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
   @Get()
-  async findAll(@Query() options: PaginationDto) {
+  async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto) {
     return await this.service.findAll(options);
   }
 
@@ -121,6 +122,7 @@ export class TransportCompanyController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateTransportCompanyDTO,
   ) {
+    console.log('-------------------------------------')
     const result = await this.service.create(id, file, body);
 
     return result;

@@ -24,10 +24,9 @@ export class AccessTokenJWTGuard extends AuthGuard('jwt') {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }
-
-    if (user.purpose !== 'accessToken') {
-      throw new UnauthorizedException();
-    }
+    // if (user.purpose !== 'accessToken') {
+    //   throw new UnauthorizedException();
+    // }
 
     return user;
     // if (user.sub) {

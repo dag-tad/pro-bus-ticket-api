@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ImageUploader } from './cloudinary.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransportCompany } from '../entity/transport-company.entity';
@@ -11,4 +11,4 @@ import { TransportCompanyController } from './transport-company.controller';
   providers: [TransportCompanyService, ImageUploader], 
   exports: [TransportCompanyService, ImageUploader],
 })
-export class TransportCompanyModule {}
+export class TransportCompanyModule{}
