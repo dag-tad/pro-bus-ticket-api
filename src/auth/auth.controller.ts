@@ -3,6 +3,7 @@ import {
   Controller,
   Headers,
   HttpException,
+  HttpStatus,
   Post,
   Req,
   Res,
@@ -52,9 +53,15 @@ export class AuthController {
     if (result instanceof HttpException) {
       return result;
     }
-
     if (!result.success) {
-      return { success: false, redirect: 'http://reset-page' };
+      return new HttpException(
+        {
+          status: HttpStatus.NON_AUTHORITATIVE_INFORMATION,
+          message: 'Non-Authoritative Information',
+          data: { message: 'change your password', redirectTo: '/admin/change-password' },
+        },
+        HttpStatus.NON_AUTHORITATIVE_INFORMATION,
+      );
     }
 
     return result;
@@ -68,10 +75,7 @@ export class AuthController {
     @Req() req,
   ): Promise<{ accessToken: string } | HttpException> {
     const { sub } = req.user;
-    const result = await this.authService.verifyOTP(sub, otpDto.otp);
-    
-    console.log(result)
-    return result
+    return await this.authService.verifyOTP(sub, otpDto.otp);
   }
 
   @Post('refreshToken')

@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -36,6 +37,7 @@ import { PaginationDto } from 'src/dto/pagination.dto';
 import { UpdateTransportCompanyStatusDTO } from 'src/dto/update-transport-company-status.dto';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
+import { TransportCompany } from 'src/entity/transport-company.entity';
 
 @ApiTags('transport-company')
 @Controller('transport-company')
@@ -48,6 +50,30 @@ export class TransportCompanyController {
   @Get()
   async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto) {
     return await this.service.findAll(options);
+  }
+
+  @Get(':id')
+  @RequireAccess([REALM.SUPER_ADMIN], [ROLE.ADMIN])
+  @ApiOperation({ summary: 'Company detail' })
+  @ApiParam({ name: 'id', description: 'Company ID', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Company detail fetched successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Company not found.',
+  })
+  async getCompanyById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: TransportCompany }> {
+    const result = await this.service.getCompanyById(id);
+
+    if (!result) {
+      throw new NotFoundException(`Company with id = ${id} not found.`)
+    }
+
+    return { data: result }
   }
 
   @Patch(':id')
@@ -74,6 +100,7 @@ export class TransportCompanyController {
       example: { success: false, message: 'Company status update failed' },
     },
   })
+
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() statusDto: UpdateTransportCompanyStatusDTO,
@@ -122,7 +149,6 @@ export class TransportCompanyController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateTransportCompanyDTO,
   ) {
-    console.log('-------------------------------------')
     const result = await this.service.create(id, file, body);
 
     return result;

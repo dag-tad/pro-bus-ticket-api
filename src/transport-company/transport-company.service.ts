@@ -152,6 +152,12 @@ export class TransportCompanyService {
     }
   }
 
+  async getCompanyById(
+    id: string,
+  ): Promise< TransportCompany | null > {
+    return await this.repo.findOneBy({ id });
+  }
+
   async updateStatus(
     id: string,
     status: CompanyStatus,

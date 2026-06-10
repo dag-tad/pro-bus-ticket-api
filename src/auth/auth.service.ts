@@ -74,9 +74,6 @@ export class AuthService {
     const loginAttemptCount = await this.redis.incr(loginAttemptKey);
     this.redis.expire(loginAttemptKey, 180);
 
-    if (!user.passwordSet) {
-      return { success: false };
-    }
 
     const passwordMatched = await bcrypt.compare(
       loginDTO.password,
@@ -132,7 +129,6 @@ export class AuthService {
         await this.redis.set(`auth:accessToken:user:${sub}`, loginToken, {
           ex: 500,
         });
-
         // save otp on redis
         await this.redis.set(`auth:otp:user:${sub}`, otp, { ex: 300 });
         const url = process.env.SMS_URL!;
@@ -343,7 +339,7 @@ export class AuthService {
 
     await this.userRepo.update(
       { id },
-      { password: hashedPassword, passwordHistory: newPasswordHistory },
+      { password: hashedPassword, passwordHistory: newPasswordHistory, passwordSet: true },
     );
 
     return { message: 'your password is successfully changed' };
