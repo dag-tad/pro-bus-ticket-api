@@ -11,6 +11,8 @@ export class AccessTokenJWTGuard extends AuthGuard('jwt') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+      console.log("JWT GUARD HIT")
+
     return super.canActivate(context);
   }
 
@@ -21,6 +23,7 @@ export class AccessTokenJWTGuard extends AuthGuard('jwt') {
     context: ExecutionContext,
     status?: any,
   ): TUser {
+    console.log(err, user)
     if (err || !user) {
       throw err || new UnauthorizedException();
     }

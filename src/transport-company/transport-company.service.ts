@@ -34,7 +34,7 @@ export class TransportCompanyService {
   ): Promise<PaginatedResponse<TransportCompany>> {
     const { page = 1, limit = 10, search, sortBy, sortOrder } = options;
     const skip = (page - 1) * limit;
-
+console.log('------------------------------------------')
     const queryBuilder = this.repo.createQueryBuilder('transport_companies');
 
     if (search) {
@@ -57,7 +57,7 @@ export class TransportCompanyService {
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;
     const hasPreviousPage = page! > 1;
-
+console.log(data)
     return {
       data,
       meta: {
@@ -128,7 +128,7 @@ export class TransportCompanyService {
         _user.lastName = data.lastName;
         _user.phone = data.phone;
         _user.email = data.adminEmail;
-        _user.role = ROLE.ADMIN;
+        _user.role = ROLE.COMPANY_ADMIN;
         _user.realm = REALM.TRANSPORT_COMPANY;
         _user.createdById = id;
         _user.createdAt = new Date();

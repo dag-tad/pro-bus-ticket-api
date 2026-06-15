@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   HttpException,
   HttpStatus,
@@ -20,6 +21,8 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { RequestResetPasswordDto } from '../dto/request-reset-password.dto';
 import { VerifyResetPasswordDto } from '../dto/verify-reset-password.dto';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { RequireAccess } from 'src/decorators/access.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -42,7 +45,10 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async login(@Body() loginDTO: LoginDTO) {
+  async login(
+    @Body() loginDTO: LoginDTO,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     // : Promise<
     //   | { 'accessToken': string; 'refreshToken': string, success: boolean }
     //   | { otpToken: string, success: boolean }
@@ -53,18 +59,64 @@ export class AuthController {
     if (result instanceof HttpException) {
       return result;
     }
+
     if (!result.success) {
       return new HttpException(
         {
           status: HttpStatus.NON_AUTHORITATIVE_INFORMATION,
           message: 'Non-Authoritative Information',
-          data: { message: 'change your password', redirectTo: '/admin/change-password' },
+          data: {
+            message: 'change your password',
+            redirectTo: '/admin/change-password',
+          },
         },
         HttpStatus.NON_AUTHORITATIVE_INFORMATION,
       );
     }
 
-    return result;
+    if ('accessToken' in result && 'refreshToken' in result) {
+      response.cookie('access_token', result.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        path: '/',
+      });
+
+      response.cookie('refresh_token', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
+
+      return {
+        success: true,
+      };
+    }
+  }
+
+  @Get('me')
+  @UseGuards(AccessTokenJWTGuard)
+  @RequireAccess(
+    ['*'],
+    ['*'],
+  )
+  me(@Req() req: any) {
+    const user = req.user;
+
+    return {
+      id: user.userId,
+      role: user.role,
+      realm: user.realm,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      passwordSet: user.passwordSet,
+      purpose: user.purpose,
+    };
   }
 
   @Post('verify-otp')

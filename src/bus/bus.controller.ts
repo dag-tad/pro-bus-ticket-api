@@ -27,14 +27,14 @@ export class BusController {
   @ApiBody({
     type: CreateBusModelDTO,
   })
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @Post('model/create')
   async createBusModel(@Body() model: CreateBusModelDTO): Promise<any> {
     return this.busService.createBusModel(model);
   }
 
   @Post('create')
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @ApiOperation({ summary: 'Create bus for a company' })
   @ApiBody({
     type: CreateBusDTO,

@@ -46,7 +46,7 @@ export class CityController {
 
   @Post('create')
   @UseGuards(AccessTokenJWTGuard, AccessGuard)
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN])
   @ApiOperation({ summary: 'Create city' })
   @ApiBody({
     type: CreateCityDTO,
