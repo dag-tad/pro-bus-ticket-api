@@ -34,7 +34,7 @@ export class TransportCompanyService {
   ): Promise<PaginatedResponse<TransportCompany>> {
     const { page = 1, limit = 10, search, sortBy, sortOrder } = options;
     const skip = (page - 1) * limit;
-console.log('------------------------------------------')
+
     const queryBuilder = this.repo.createQueryBuilder('transport_companies');
 
     if (search) {
@@ -134,6 +134,7 @@ console.log(data)
         _user.createdAt = new Date();
         _user.password = hashedPassword;
         _user.passwordHistory = passwordHistory;
+        _user.enabled = false
 
         const savedCompany = await mgr.save(_company);
         const savedUser = await mgr.save(_user);

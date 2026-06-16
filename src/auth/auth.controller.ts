@@ -130,7 +130,7 @@ export class AuthController {
     return await this.authService.verifyOTP(sub, otpDto.otp);
   }
 
-  @Post('refreshToken')
+  @Post('refresh-token')
   @UseGuards(RefreshJwtAuthGuard)
   async refreshToken(
     @Req() req,
