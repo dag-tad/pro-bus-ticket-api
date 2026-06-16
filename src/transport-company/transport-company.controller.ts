@@ -46,14 +46,15 @@ import { TransportCompany } from 'src/entity/transport-company.entity';
 export class TransportCompanyController {
   constructor(private readonly service: TransportCompanyService) {}
 
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @Get()
   async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto) {
+    console.log('controller', options)
     return await this.service.findAll(options);
   }
 
   @Get(':id')
-  @RequireAccess([REALM.SUPER_ADMIN], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @ApiOperation({ summary: 'Company detail' })
   @ApiParam({ name: 'id', description: 'Company ID', type: String })
   @ApiResponse({
@@ -77,7 +78,7 @@ export class TransportCompanyController {
   }
 
   @Patch(':id')
-  @RequireAccess([REALM.SUPER_ADMIN], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @ApiOperation({ summary: 'Update company status' })
   @ApiBody({
     type: UpdateTransportCompanyStatusDTO,
@@ -110,7 +111,7 @@ export class TransportCompanyController {
   }
 
   @Post()
-  @RequireAccess([REALM.SUPER_ADMIN, REALM.TRANSPORT_COMPANY], [ROLE.ADMIN])
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @ApiOperation({ summary: 'Create transport company' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
