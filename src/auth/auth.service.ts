@@ -171,7 +171,6 @@ export class AuthService {
       const userBlocked = (await this.redis.get(
         blockUserKey,
       )) as unknown as boolean;
-
       if (loginAttemptCount === 3 && !temporaryLocked && !userBlocked) {
         await this.redis.set(temporaryLockKey, 'true');
         await this.redis.expire(temporaryLockKey, 60);
@@ -188,6 +187,7 @@ export class AuthService {
           { id: user.id },
           { enabled: false, lockedReason: 'Too many login attempt' },
         );
+console.log(userBlocked, loginAttemptCount)
 
         throw new UnauthorizedException(
           'Your account has been blocked. Please contact the administrator.',

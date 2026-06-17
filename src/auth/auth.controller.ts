@@ -78,7 +78,7 @@ export class AuthController {
       response.cookie('access_token', result.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'development' ? 'lax' : 'none',
         maxAge: 15 * 60 * 1000, // 15 minutes
         path: '/',
       });
@@ -99,10 +99,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AccessTokenJWTGuard)
-  @RequireAccess(
-    ['*'],
-    ['*'],
-  )
+  @RequireAccess(['*'], ['*'])
   me(@Req() req: any) {
     const user = req.user;
 
@@ -157,7 +154,9 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AccessTokenJWTGuard)
+  @RequireAccess(['*'], ['*'])
   async logout(@Req() req): Promise<{ message: string } | HttpException> {
+    console.log(req.user)
     const { sub } = req.user;
 
     return await this.authService.logout(sub);
