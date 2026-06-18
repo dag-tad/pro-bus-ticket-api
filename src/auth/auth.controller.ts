@@ -77,7 +77,7 @@ export class AuthController {
     if ('accessToken' in result && 'refreshToken' in result) {
       response.cookie('access_token', result.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'development' ? 'lax' : 'none',
         maxAge: 15 * 60 * 1000, // 15 minutes
         path: '/',
@@ -85,7 +85,7 @@ export class AuthController {
 
       response.cookie('refresh_token', result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'development' ? 'lax' : 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/',
