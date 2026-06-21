@@ -49,7 +49,6 @@ export class TransportCompanyController {
   @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @Get()
   async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto) {
-    console.log('controller', options)
     return await this.service.findAll(options);
   }
 

@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
@@ -18,6 +19,7 @@ import { ROLE } from '../enums/role.enum';
 import { Passenger } from './passenger.entity';
 import { TransportCompany } from './transport-company.entity';
 import { City } from './cities.entity';
+import { BusModel } from './bus-model.entity';
 
 @Entity('users')
 export class User {
@@ -45,7 +47,7 @@ export class User {
 
   @Column({ default: false })
   @IsOptional()
-  passwordSet: boolean
+  passwordSet: boolean;
 
   @Column({ type: 'text', array: true, default: () => 'ARRAY[]::text[]' })
   @Exclude()
@@ -76,7 +78,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: Gender,
-    nullable: true
+    nullable: true,
   })
   gender?: Gender;
 
@@ -95,7 +97,7 @@ export class User {
   @Column({ type: 'timestamptz', nullable: true })
   lastLogin: Date;
 
-  @Column({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
@@ -107,7 +109,9 @@ export class User {
   @OneToMany(() => User, (user) => user.createdBy)
   createdUsers?: User[];
 
-  @ManyToOne(() => TransportCompany, (company) => company.id, { nullable: true })
+  @ManyToOne(() => TransportCompany, (company) => company.id, {
+    nullable: true,
+  })
   // @JoinColumn({ name: 'createdById' })
   companyId?: string;
 
@@ -115,7 +119,7 @@ export class User {
   @JoinColumn({ name: 'createdById' })
   createdBy?: User;
 
-  @OneToOne(() => Passenger, passenger => passenger.user, { cascade: true })
+  @OneToOne(() => Passenger, (passenger) => passenger.user, { cascade: true })
   passenger: Passenger;
 
   @OneToMany(() => City, (city) => city.createdByUser)
@@ -123,4 +127,11 @@ export class User {
 
   @OneToMany(() => City, (city) => city.updatedByUser)
   updatedCities: City[];
+
+  @OneToMany(() => BusModel, (busModel) => busModel.createdBy)
+  // @JoinColumn({
+    //   name: 'createdById', // The foreign key column name in BusModel table
+    //   referencedColumnName: 'id', // The column in User table that it references
+    // })
+    busModels: BusModel[];
 }

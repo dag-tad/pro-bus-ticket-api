@@ -52,12 +52,10 @@ export class TransportCompanyService {
       .take(limit)
       .getManyAndCount();
 
-    console.log(search);
-
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;
     const hasPreviousPage = page! > 1;
-console.log(data)
+
     return {
       data,
       meta: {

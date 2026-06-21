@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { BusService } from './bus.service';
 import { AccessGuard } from '../auth/guard/access.guard';
 import { AccessTokenJWTGuard } from '../auth/guard/access-token-jwt.guard';
@@ -15,6 +15,8 @@ import {
 import { CreateBusModelDTO } from 'src/dto/bus-model.dto';
 import { CreateBusDTO } from 'src/dto/create-bus.dto';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { PaginationDto } from 'src/dto/pagination.dto';
+import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
 
 @ApiTags('bus')
 @ApiBearerAuth('accessToken')
@@ -29,8 +31,15 @@ export class BusController {
   })
   @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @Post('model/create')
-  async createBusModel(@Body() model: CreateBusModelDTO): Promise<any> {
-    return this.busService.createBusModel(model);
+  async createBusModel(@CurrentUser('userId') id: string, @Body() model: any): Promise<any> {
+    return this.busService.createBusModel(model, id);
+  }
+
+  @ApiOperation({ summary: 'fetch bus models' })
+  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @Get('model/paginate')
+  async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto){
+    return await this.busService.findAllModels(options);
   }
 
   @Post('create')
