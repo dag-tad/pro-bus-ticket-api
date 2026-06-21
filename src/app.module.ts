@@ -21,7 +21,7 @@ import { CityModule } from './city/city.module';
     ConfigModule.forRoot({
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       isGlobal: true,
-      load: [configuration],
+      load: [configuration]
     }),
     AuthModule,
     UserModule,
@@ -36,8 +36,9 @@ import { CityModule } from './city/city.module';
         ssl: {
           rejectUnauthorized: false,
         },
-        autoLoadEntities: true,
+        // autoLoadEntities: true,
         synchronize: true,
+        // logging: true,
         entities: ['dist/**/*.entity.js']
       }),
     }),

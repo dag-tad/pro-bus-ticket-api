@@ -156,7 +156,6 @@ export class AuthController {
   @UseGuards(AccessTokenJWTGuard)
   @RequireAccess(['*'], ['*'])
   async logout(@Req() req): Promise<{ message: string } | HttpException> {
-    console.log(req.user)
     const { sub } = req.user;
 
     return await this.authService.logout(sub);

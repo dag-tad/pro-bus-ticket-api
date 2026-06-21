@@ -5,9 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bus } from '../entity/bus.entity';
 import { BusModel_Company } from 'src/entity/bus-model_company.entity';
 import { BusModel } from 'src/entity/bus-model.entity';
+import { UserModule } from 'src/user/user.module';
+import { User } from 'src/entity/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Bus, BusModel, BusModel_Company])],
+  imports: [TypeOrmModule.forFeature([UserModule, Bus, BusModel, BusModel_Company, User]), ],
   providers: [BusService],
   controllers: [BusController],
   exports: [BusService]

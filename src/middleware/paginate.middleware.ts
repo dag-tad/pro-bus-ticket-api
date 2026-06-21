@@ -4,7 +4,6 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class PaginateMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
 
     const normalizedSearch =
       typeof req.query.search === 'string' &&
@@ -21,7 +20,6 @@ export class PaginateMiddleware implements NestMiddleware {
             }
         }
     
-    console.log(req.query, '===');
     next();
   }
 }

@@ -187,7 +187,6 @@ export class AuthService {
           { id: user.id },
           { enabled: false, lockedReason: 'Too many login attempt' },
         );
-console.log(userBlocked, loginAttemptCount)
 
         throw new UnauthorizedException(
           'Your account has been blocked. Please contact the administrator.',

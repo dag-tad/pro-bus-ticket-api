@@ -13,6 +13,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { BusClass } from 'src/enums/bus-class.enum';
+import { FuelType } from 'src/enums/fuel-type.enum';
 
 class SeatCellDTO {
   @ApiProperty({
@@ -20,8 +22,8 @@ class SeatCellDTO {
     example: 'seat',
   })
   @IsString()
-  @IsIn(['seat', 'aisle', 'door', 'restRoom'])
-  type!: 'seat' | 'aisle' | 'door' | 'restRoom';
+  @IsIn(['seat', 'aisle', 'door', 'restRoom', 'driver'])
+  type!: 'seat' | 'aisle' | 'door' | 'restRoom' | 'driver';
 
   @ApiProperty({
     type: 'number',
@@ -68,7 +70,7 @@ export class BusAmenitiesDTO {
   })
   @IsBoolean()
   @IsNotEmpty()
-  powerOutlet: boolean;
+  usbCharging: boolean;
 
   @ApiProperty({
     description: 'Air conditioning availability',
@@ -78,6 +80,24 @@ export class BusAmenitiesDTO {
   @IsBoolean()
   @IsNotEmpty()
   ac: boolean;
+
+  @ApiProperty({
+    description: 'Reclining seats availability',
+    example: true,
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  recliningSeats: boolean;
+
+  @ApiProperty({
+    description: 'Reading light availability',
+    example: true,
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  readingLight: boolean;
 }
 
 export class CreateBusModelDTO {
@@ -120,13 +140,15 @@ export class CreateBusModelDTO {
   @ApiProperty({
     description: 'Bus amenities',
     type: BusAmenitiesDTO,
-    required: true,
+    required: false,
     example: {
       tv: true,
       wifi: false,
       restRoom: true,
       powerOutlet: true,
       ac: true,
+      recliningSeats: true,
+      readingLight: true,
     },
   })
   @IsObject()
@@ -134,14 +156,32 @@ export class CreateBusModelDTO {
   @Type(() => BusAmenitiesDTO)
   amenities!: BusAmenitiesDTO;
 
-//   @ApiProperty({
-//     description: 'Baggage capacity in kg per passenger',
-//     example: 40,
-//     required: true,
-//   })
-//   @IsPositive()
-//   @IsNotEmpty()
-//   baggageCapacity: number;
+  @ApiProperty({
+    description: "Bus class",
+    example: 'standard',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  class: BusClass;
+
+  @ApiProperty({
+    description: "Fuel type",
+    example: 'diesel',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  fuelType: FuelType;
+
+  //   @ApiProperty({
+  //     description: 'Baggage capacity in kg per passenger',
+  //     example: 40,
+  //     required: true,
+  //   })
+  //   @IsPositive()
+  //   @IsNotEmpty()
+  //   baggageCapacity: number;
 
   @ApiProperty({
     description: 'Description',
@@ -161,23 +201,23 @@ export class CreateBusModelDTO {
         type: 'object',
         properties: {
           type: { type: 'string', enum: ['seat', 'aisle', 'door', 'restRoom'] },
-          seatNumber: { type: 'number', nullable: true }
-        }
-      }
+          seatNumber: { type: 'number', nullable: true },
+        },
+      },
     },
     example: [
       [
         { type: 'seat', seatNumber: 1 },
         { type: 'seat', seatNumber: 2 },
-        { type: 'door', seatNumber: null }
+        { type: 'door', seatNumber: null },
       ],
       [
         { type: 'seat', seatNumber: 3 },
         { type: 'seat', seatNumber: 4 },
         { type: 'aisle', seatNumber: null },
-        { type: 'seat', seatNumber: 5 }
-      ]
-    ]
+        { type: 'seat', seatNumber: 5 },
+      ],
+    ],
   })
   @IsArray()
   @ValidateNested({ each: true })
