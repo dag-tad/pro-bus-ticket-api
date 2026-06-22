@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BusService } from './bus.service';
 import { AccessGuard } from '../auth/guard/access.guard';
 import { AccessTokenJWTGuard } from '../auth/guard/access-token-jwt.guard';
@@ -9,6 +19,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -17,6 +28,7 @@ import { CreateBusDTO } from 'src/dto/create-bus.dto';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
+import { BusModel } from 'src/entity/bus-model.entity';
 
 @ApiTags('bus')
 @ApiBearerAuth('accessToken')
@@ -29,21 +41,57 @@ export class BusController {
   @ApiBody({
     type: CreateBusModelDTO,
   })
-  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
   @Post('model/create')
-  async createBusModel(@CurrentUser('userId') id: string, @Body() model: any): Promise<any> {
+  async createBusModel(
+    @CurrentUser('userId') id: string,
+    @Body() model: any,
+  ): Promise<any> {
     return this.busService.createBusModel(model, id);
   }
 
   @ApiOperation({ summary: 'fetch bus models' })
-  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
   @Get('model/paginate')
-  async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto){
+  async findAll(@Query(new NormalizeQueryPipe()) options: PaginationDto) {
     return await this.busService.findAllModels(options);
   }
 
+  @RequireAccess([REALM.SYSTEM], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @ApiOperation({ summary: 'Bus model detail' })
+  @ApiParam({ name: 'id', description: 'Model id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Bus model detail fetched successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Bus model not found.'
+  })
+  @Get('model/:id')
+  async getCompanyById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: BusModel }> {
+    const result = await this.busService.getBusModelById(id);
+
+    if (!result) {
+      throw new NotFoundException(`Bus model with id = ${id} not found.`);
+    }
+
+    return { data: result };
+  }
+
   @Post('create')
-  @RequireAccess([REALM.SYSTEM, REALM.TRANSPORT_COMPANY], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
   @ApiOperation({ summary: 'Create bus for a company' })
   @ApiBody({
     type: CreateBusDTO,

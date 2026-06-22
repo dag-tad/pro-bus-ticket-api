@@ -63,6 +63,12 @@ export class BusService {
     };
   }
 
+  async getBusModelById(
+      id: string,
+    ): Promise< BusModel | null > {
+      return await this.modelRepo.findOneBy({ id });
+    }
+
   async create(data: CreateBusDTO) {
     const bus = new Bus();
 
