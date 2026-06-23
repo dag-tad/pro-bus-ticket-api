@@ -98,7 +98,6 @@ export class BusService {
       throw new ConflictException(`Bus model "${_data.model}" already exists`);
     }
 
-    // Create the bus model
     const busModel = this.modelRepo.create({
       ..._data,
 
@@ -107,6 +106,28 @@ export class BusService {
     });
 
     return await this.modelRepo.save(busModel);
+  }
+
+  async updateBusModel(id: string, _data: CreateBusModelDTO, userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const result = await this.modelRepo.update(id, {
+      ..._data,
+      updatedById: userId,
+      updatedBy: user,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Bus model with ID ${id} not found`);
+    }
+    
+    return this.modelRepo.findOne({ where: { id } });
   }
 
   async createBus(data: CreateBusDTO) {

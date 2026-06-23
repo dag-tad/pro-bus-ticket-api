@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -51,6 +52,24 @@ export class BusController {
     @Body() model: any,
   ): Promise<any> {
     return this.busService.createBusModel(model, id);
+  }
+
+  @ApiOperation({ summary: 'Update bus model' })
+  @ApiBody({
+    type: CreateBusModelDTO,
+  })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Patch('model/:id')
+  async updateBusModel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('userId') userId: string,
+    @Body() model: any,
+  ): Promise<any> {
+    
+    return this.busService.updateBusModel(id, model, userId);
   }
 
   @ApiOperation({ summary: 'fetch bus models' })
