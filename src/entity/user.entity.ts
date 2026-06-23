@@ -134,4 +134,7 @@ export class User {
     //   referencedColumnName: 'id', // The column in User table that it references
     // })
     busModels: BusModel[];
+
+  @OneToMany(() => BusModel, (busModel) => busModel.updatedBy)
+    updatedBusModels: BusModel[];
 }

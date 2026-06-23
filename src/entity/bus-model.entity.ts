@@ -67,6 +67,9 @@ export class BusModel {
   @Column({ name: 'createdById', type: 'uuid' })
   createdById: string;
 
+  @Column({ name: 'updatedById', type: 'uuid', nullable: true })
+  updatedById: string;
+
   @ManyToOne(() => User, (user) => user.busModels, {
     onDelete: 'RESTRICT', // Prevent deletion of user if they have bus models
     onUpdate: 'CASCADE',
@@ -77,6 +80,17 @@ export class BusModel {
     referencedColumnName: 'id'
   })
   createdBy: User;
+
+  @ManyToOne(() => User, (user) => user.busModels, {
+    onDelete: 'RESTRICT', // Prevent deletion of user if they have bus models
+    onUpdate: 'CASCADE',
+    nullable: false
+  })
+  @JoinColumn({ 
+    name: 'updatedById',
+    referencedColumnName: 'id'
+  })
+  updatedBy: User;
 
   // @Column()
   // companyId: string;
