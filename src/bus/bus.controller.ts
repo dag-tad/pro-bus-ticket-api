@@ -54,6 +54,19 @@ export class BusController {
     return this.busService.createBusModel(model, id);
   }
 
+  @ApiOperation({ summary: 'Toggle bus model' })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Patch('model/toggle-status/:id')
+  async toggleBusModelStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('userId') userId: string,
+  ): Promise<any> {
+    return await this.busService.toggleBusModelStatus(id, userId);
+  }
+
   @ApiOperation({ summary: 'Update bus model' })
   @ApiBody({
     type: CreateBusModelDTO,

@@ -57,6 +57,9 @@ export class BusModel {
   @Column({ type: 'text', nullable: true })
   description: string; // Additional notes about the bus
 
+  @Column({ type: 'boolean', default: true})
+  enabled: boolean
+
   // Relations
   @OneToMany(() => BusModel_Company, (link: BusModel_Company) => link.busModel)
   companyLinks: BusModel_Company[];
