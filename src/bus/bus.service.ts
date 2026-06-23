@@ -130,6 +130,38 @@ export class BusService {
     return this.modelRepo.findOne({ where: { id } });
   }
 
+  async toggleBusModelStatus(id: string, userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Invalid user`);
+    }
+
+    const busModel = await this.modelRepo.findOne({
+      where: { id },
+    });
+
+    if (!busModel) {
+      throw new NotFoundException(`Bus model with ID ${id} not found`);
+    }
+
+    const result = await this.modelRepo.update(id, {
+      enabled: !busModel.enabled,
+      updatedById: userId,
+      updatedBy: user,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Bus model with ID ${id} not found`);
+    }
+    
+    const model = await this.modelRepo.findOne({ where: { id } });
+
+    return model
+  }
+
   async createBus(data: CreateBusDTO) {
     const bus = new Bus();
 
