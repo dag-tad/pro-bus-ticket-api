@@ -136,7 +136,7 @@ export class TransportCompany {
   @JoinColumn({ name: 'createdById' })
   createdBy: User;
 
-  @OneToMany(() => User, (user) => user.companyId)
+  @OneToMany(() => User, (user) => user.company)
   users: User[];
 
   @Column({ nullable: true })

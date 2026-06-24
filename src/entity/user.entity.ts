@@ -20,6 +20,7 @@ import { Passenger } from './passenger.entity';
 import { TransportCompany } from './transport-company.entity';
 import { City } from './cities.entity';
 import { BusModel } from './bus-model.entity';
+import { Bus } from './bus.entity';
 
 @Entity('users')
 export class User {
@@ -109,11 +110,14 @@ export class User {
   @OneToMany(() => User, (user) => user.createdBy)
   createdUsers?: User[];
 
-  @ManyToOne(() => TransportCompany, (company) => company.id, {
+  @Column({ nullable: true })
+  companyId?: string;
+
+  @ManyToOne(() => TransportCompany, (company) => company.users, {
     nullable: true,
   })
-  // @JoinColumn({ name: 'createdById' })
-  companyId?: string;
+  @JoinColumn({ name: 'companyId' })  
+  company: TransportCompany;
 
   @ManyToOne(() => User, (user) => user.createdUsers, { nullable: true })
   @JoinColumn({ name: 'createdById' })
@@ -129,12 +133,14 @@ export class User {
   updatedCities: City[];
 
   @OneToMany(() => BusModel, (busModel) => busModel.createdBy)
-  // @JoinColumn({
-    //   name: 'createdById', // The foreign key column name in BusModel table
-    //   referencedColumnName: 'id', // The column in User table that it references
-    // })
     busModels: BusModel[];
 
   @OneToMany(() => BusModel, (busModel) => busModel.updatedBy)
     updatedBusModels: BusModel[];
+
+  @OneToMany(() => Bus, (bus) => bus.createdBy)
+    createdBusses: Bus[];
+
+  @OneToMany(() => Bus, (bus) => bus.updatedBy)
+    updatedBusses: Bus[];
 }

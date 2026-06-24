@@ -30,6 +30,9 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
 import { BusModel } from 'src/entity/bus-model.entity';
+import { User } from 'src/entity/user.entity';
+import { Bus } from 'src/entity/bus.entity';
+import { DuplicateBusDTO } from 'src/dto/duplicate-bus.dto';
 
 @ApiTags('bus')
 @ApiBearerAuth('accessToken')
@@ -37,6 +40,33 @@ import { BusModel } from 'src/entity/bus-model.entity';
 @UseGuards(AccessTokenJWTGuard, AccessGuard)
 export class BusController {
   constructor(private busService: BusService) {}
+
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Bus detail' })
+  @ApiParam({ name: 'id', description: 'Bus id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Bus detail fetched successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Bus not found.',
+  })
+  @Get('detail/:id')
+  async getBusById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: Bus }> {
+    const result = await this.busService.getBusById(id);
+
+    if (!result) {
+      throw new NotFoundException(`Bus with id = ${id} not found.`);
+    }
+
+    return { data: result };
+  }
 
   @ApiOperation({ summary: 'Create bus model' })
   @ApiBody({
@@ -81,8 +111,17 @@ export class BusController {
     @CurrentUser('userId') userId: string,
     @Body() model: any,
   ): Promise<any> {
-    
     return this.busService.updateBusModel(id, model, userId);
+  }
+
+  @ApiOperation({ summary: 'fetch bus models' })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Get('paginate')
+  async findAllBusses(@CurrentUser('userId') user: User, @Query(new NormalizeQueryPipe()) options: PaginationDto) {
+    return await this.busService.findAllBusses(options, user.companyId);
   }
 
   @ApiOperation({ summary: 'fetch bus models' })
@@ -95,7 +134,10 @@ export class BusController {
     return await this.busService.findAllModels(options);
   }
 
-  @RequireAccess([REALM.SYSTEM], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
   @ApiOperation({ summary: 'Bus model detail' })
   @ApiParam({ name: 'id', description: 'Model id', type: String })
   @ApiResponse({
@@ -104,10 +146,10 @@ export class BusController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Bus model not found.'
+    description: 'Bus model not found.',
   })
   @Get('model/:id')
-  async getCompanyById(
+  async getBusModelById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ data: BusModel }> {
     const result = await this.busService.getBusModelById(id);
@@ -131,10 +173,42 @@ export class BusController {
   })
   @ApiResponse({ status: 201, description: 'Bus created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async addModelForCompany(
-    @CurrentUser('sub') id: any,
+  async createBus(
+    @CurrentUser() user: User,
     @Body() data: CreateBusDTO,
   ) {
-    return await this.busService.create(data);
+    const _user = user as unknown as any;
+    const companyId = user.companyId ? user.companyId : data.companyId;
+    return await this.busService.create({
+      userId: _user.userId,
+      bus: data,
+      companyId: companyId!,
+    });
+  }
+
+  @Post('duplicate')
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Duplicate bus' })
+  @ApiBody({
+    type: DuplicateBusDTO,
+    description: 'Duplicate a bus',
+  })
+  @ApiResponse({ status: 201, description: 'Bus duplicated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async duplicateBus(
+    @CurrentUser() user: User,
+    @Body() data: DuplicateBusDTO,
+  ) {
+    const _user = user as unknown as any;
+    const companyId = user.companyId ? user.companyId : data.companyId;
+    return await this.busService.duplicateBus({
+      userId: _user.userId,
+      bus: data,
+      companyId: companyId!,
+    });
+    return data
   }
 }

@@ -14,12 +14,12 @@ import { Type } from 'class-transformer';
 // DTO for seat cell
 export class SeatCellDTO {
   @ApiProperty({ 
-    enum: ['seat', 'aisle', 'door', 'restRoom'],
+    enum: ['driver', 'seat', 'aisle', 'door', 'restRoom'],
     example: 'seat'
   })
-  @IsIn(['seat', 'aisle', 'door', 'restRoom'])
+  @IsIn(['driver', 'seat', 'aisle', 'door', 'restRoom'])
   @IsNotEmpty()
-  type!: 'seat' | 'aisle' | 'door' | 'restRoom';
+  type!: 'driver' | 'seat' | 'aisle' | 'door' | 'restRoom';
 
   @ApiProperty({ 
     type: 'string', 
