@@ -5,7 +5,7 @@ import { SeatCellDTO } from "./seat-cell.dto";
 
 export class CreateBusDTO {
   @ApiProperty({
-    description: 'Bus Model ID',
+    description: 'Bus ID',
     example: '123e4567-e89b-12d3-a456-426614174000'
   })
   @IsUUID()
@@ -34,7 +34,7 @@ export class CreateBusDTO {
   })
   @IsUUID()
   @IsNotEmpty()
-  companyId!: string;
+  companyId?: string;
 
   @ApiProperty({
       description: '2D Seat layout array',
@@ -44,7 +44,7 @@ export class CreateBusDTO {
         items: {
           type: 'object',
           properties: {
-            type: { type: 'string', enum: ['seat', 'aisle', 'door', 'restRoom'] },
+            type: { type: 'string', enum: ['driver', 'seat', 'aisle', 'door', 'restRoom'] },
             seatNumber: { type: 'number', nullable: true }
           }
         }

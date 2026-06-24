@@ -7,9 +7,10 @@ import { BusModel_Company } from 'src/entity/bus-model_company.entity';
 import { BusModel } from 'src/entity/bus-model.entity';
 import { UserModule } from 'src/user/user.module';
 import { User } from 'src/entity/user.entity';
+import { TransportCompany } from 'src/entity/transport-company.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserModule, Bus, BusModel, BusModel_Company, User]), ],
+  imports: [TypeOrmModule.forFeature([UserModule, Bus, BusModel, BusModel_Company, User, TransportCompany]), ],
   providers: [BusService],
   controllers: [BusController],
   exports: [BusService]
