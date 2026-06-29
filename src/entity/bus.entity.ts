@@ -21,7 +21,7 @@ import { BusModel } from './bus-model.entity';
 import { User } from './user.entity';
 
 export type SeatCell = {
-  type: 'seat' | 'aisle' | 'door' | 'restRoom';
+  type: 'seat' | 'aisle' | 'door' | 'restroom';
   seatNumber: number | string | null;
 };
 

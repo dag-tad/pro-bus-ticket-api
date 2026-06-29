@@ -1,31 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsUUID, 
-  IsArray, 
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  IsArray,
   ValidateNested,
   IsIn,
   IsNumber,
-  IsOptional 
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 // DTO for seat cell
 export class SeatCellDTO {
-  @ApiProperty({ 
-    enum: ['driver', 'seat', 'aisle', 'door', 'restRoom'],
-    example: 'seat'
+  @ApiProperty({
+    enum: ['driver', 'seat', 'aisle', 'door', 'restroom'],
+    example: 'seat',
   })
-  @IsIn(['driver', 'seat', 'aisle', 'door', 'restRoom'])
+  @IsIn(['driver', 'seat', 'aisle', 'door', 'restroom'])
   @IsNotEmpty()
-  type!: 'driver' | 'seat' | 'aisle' | 'door' | 'restRoom';
+  type!: 'driver' | 'seat' | 'aisle' | 'door' | 'restroom';
 
-  @ApiProperty({ 
-    type: 'string', 
+  @ApiProperty({
+    type: 'string',
     nullable: true,
     example: 1,
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()

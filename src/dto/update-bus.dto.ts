@@ -7,12 +7,13 @@ import {
   IsOptional,
   IsArray,
   ValidateNested,
+  IsBoolean,
 } from 'class-validator';
 import { SeatCellDTO } from './seat-cell.dto';
 
-export class CreateBusDTO {
+export class UpdateBusDTO {
   @ApiProperty({
-    description: 'Bus ID',
+    description: 'Model ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
@@ -40,7 +41,7 @@ export class CreateBusDTO {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
-  @IsNotEmpty()
+  @IsOptional()
   companyId?: string;
 
   @ApiProperty({
@@ -77,12 +78,12 @@ export class CreateBusDTO {
   @ValidateNested({ each: true })
   @Type(() => SeatCellDTO)
   seatLayout!: SeatCellDTO[][];
-  // @ApiProperty({
-  //   description: 'Seats configuration',
-  //   example: '2x2 layout',
-  //   required: false
-  // })
-  // @IsString()
-  // @IsOptional()
-  // seats?: number;
+  
+  @ApiProperty({
+    description: 'Apply for all',
+    example: 'false',
+    required: false
+  })
+  @IsBoolean()
+  applyForAll: boolean;
 }
