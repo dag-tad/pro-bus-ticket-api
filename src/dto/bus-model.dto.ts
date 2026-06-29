@@ -18,12 +18,12 @@ import { FuelType } from 'src/enums/fuel-type.enum';
 
 class SeatCellDTO {
   @ApiProperty({
-    enum: ['seat', 'aisle', 'door', 'restRoom'],
+    enum: ['seat', 'aisle', 'door', 'restroom'],
     example: 'seat',
   })
   @IsString()
-  @IsIn(['seat', 'aisle', 'door', 'restRoom', 'driver'])
-  type!: 'seat' | 'aisle' | 'door' | 'restRoom' | 'driver';
+  @IsIn(['seat', 'aisle', 'door', 'restroom', 'driver'])
+  type!: 'seat' | 'aisle' | 'door' | 'restroom' | 'driver';
 
   @ApiProperty({
     type: 'number',
@@ -61,7 +61,7 @@ export class BusAmenitiesDTO {
   })
   @IsBoolean()
   @IsNotEmpty()
-  restRoom: boolean;
+  restroom: boolean;
 
   @ApiProperty({
     description: 'Power outlet availability',
@@ -144,7 +144,7 @@ export class CreateBusModelDTO {
     example: {
       tv: true,
       wifi: false,
-      restRoom: true,
+      restroom: true,
       powerOutlet: true,
       ac: true,
       recliningSeats: true,
@@ -157,7 +157,7 @@ export class CreateBusModelDTO {
   amenities!: BusAmenitiesDTO;
 
   @ApiProperty({
-    description: "Bus class",
+    description: 'Bus class',
     example: 'standard',
     required: true,
   })
@@ -166,7 +166,7 @@ export class CreateBusModelDTO {
   class: BusClass;
 
   @ApiProperty({
-    description: "Fuel type",
+    description: 'Fuel type',
     example: 'diesel',
     required: true,
   })
@@ -200,7 +200,7 @@ export class CreateBusModelDTO {
       items: {
         type: 'object',
         properties: {
-          type: { type: 'string', enum: ['seat', 'aisle', 'door', 'restRoom'] },
+          type: { type: 'string', enum: ['seat', 'aisle', 'door', 'restroom'] },
           seatNumber: { type: 'number', nullable: true },
         },
       },

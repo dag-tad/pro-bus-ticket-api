@@ -18,6 +18,7 @@ import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
 import { User } from 'src/entity/user.entity';
 import { TransportCompany } from 'src/entity/transport-company.entity';
 import { DuplicateBusDTO } from 'src/dto/duplicate-bus.dto';
+import { UpdateBusDTO } from 'src/dto/update-bus.dto';
 
 @Injectable()
 export class BusService {
@@ -181,6 +182,56 @@ export class BusService {
     }
   }
 
+  async update(data: {
+    id: string;
+    userId: string;
+    bus: UpdateBusDTO;
+    companyId: string;
+  }) {
+    const { id, userId, bus, companyId } = data;
+    const { busModelId, plateNumber, busNumber, seatLayout, applyForAll } = bus;
+
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException(`Forbbiden or session timeout`);
+    }
+
+    const existingBus = await this.busRepo.findOne({
+      where: { id },
+    });
+
+    if (!existingBus) {
+      throw new NotFoundException(`Bus not found`);
+    }
+
+    const company = await this.companyRepo.findOne({
+      where: { id: companyId },
+    });
+
+    if (!company) {
+      throw new NotFoundException(`Company not found.`);
+    }
+    
+    if (applyForAll) {
+      await this.busRepo.update(
+        { busModelId: existingBus.busModelId, companyId },
+        { seatLayout, busModelId },
+      );
+    }
+
+    await this.busRepo.update(
+      { id },
+      { seatLayout, plateNumber, busNumber, busModelId },
+    );
+
+    return await this.busRepo.findBy({ id });
+  }
+
   async duplicateBus(data: {
     userId: string;
     bus: DuplicateBusDTO;
@@ -327,5 +378,36 @@ export class BusService {
     const model = await this.modelRepo.findOne({ where: { id } });
 
     return model;
+  }
+
+  async toggleBusStatus(id: string, userId: string, status: BusStatus) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException(`Invalid user`);
+    }
+
+    const bus = await this.busRepo.findOne({
+      where: { id },
+    });
+
+    if (!bus) {
+      throw new NotFoundException(`Bus with ID ${id} not found`);
+    }
+
+    const result = await this.busRepo.update(id, {
+      status,
+      updatedById: userId,
+      updatedBy: user,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Bus with ID ${id} not found`);
+    }
+
+    const _bus = await this.busRepo.findOne({ where: { id } });
+
+    return _bus;
   }
 }

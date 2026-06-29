@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { BusModel_Company } from './bus-model_company.entity';
 import { Bus, SeatCell } from './bus.entity';
 import { BusClass } from 'src/enums/bus-class.enum';
@@ -25,18 +33,18 @@ export class BusModel {
   totalSeats: number;
 
   @Column({
-      type: 'enum',
-      enum: BusClass,
-      nullable: true
-    })
-    class?: BusClass;
+    type: 'enum',
+    enum: BusClass,
+    nullable: true,
+  })
+  class?: BusClass;
 
   @Column({
-      type: 'enum',
-      enum: FuelType,
-      nullable: true
-    })
-    fuelType?: FuelType;
+    type: 'enum',
+    enum: FuelType,
+    nullable: true,
+  })
+  fuelType?: FuelType;
 
   @Column({ type: 'json', nullable: true })
   seatLayout: object;
@@ -45,10 +53,10 @@ export class BusModel {
   amenities: {
     tv: boolean;
     wifi: boolean;
-    restRoom: boolean;
+    restroom: boolean;
     usbCharging: boolean;
     ac: boolean;
-    recliningSeats: boolean
+    recliningSeats: boolean;
   };
 
   // @Column({ nullable: true })
@@ -57,8 +65,8 @@ export class BusModel {
   @Column({ type: 'text', nullable: true })
   description: string; // Additional notes about the bus
 
-  @Column({ type: 'boolean', default: true})
-  enabled: boolean
+  @Column({ type: 'boolean', default: true })
+  enabled: boolean;
 
   // Relations
   @OneToMany(() => BusModel_Company, (link: BusModel_Company) => link.busModel)
@@ -76,22 +84,22 @@ export class BusModel {
   @ManyToOne(() => User, (user) => user.busModels, {
     onDelete: 'RESTRICT', // Prevent deletion of user if they have bus models
     onUpdate: 'CASCADE',
-    nullable: false
+    nullable: false,
   })
-  @JoinColumn({ 
+  @JoinColumn({
     name: 'createdById',
-    referencedColumnName: 'id'
+    referencedColumnName: 'id',
   })
   createdBy: User;
 
   @ManyToOne(() => User, (user) => user.busModels, {
     onDelete: 'RESTRICT', // Prevent deletion of user if they have bus models
     onUpdate: 'CASCADE',
-    nullable: false
+    nullable: false,
   })
-  @JoinColumn({ 
+  @JoinColumn({
     name: 'updatedById',
-    referencedColumnName: 'id'
+    referencedColumnName: 'id',
   })
   updatedBy: User;
 
@@ -101,9 +109,13 @@ export class BusModel {
   // @OneToMany(() => Trip, (trip) => trip.bus)
   // trips: Trip[];
 
-  @CreateDateColumn({ type: 'timestamptz'})
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', nullable: true })
+  @Column({
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+    nullable: true,
+  })
   updatedAt: Date;
 }

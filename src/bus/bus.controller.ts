@@ -33,6 +33,8 @@ import { BusModel } from 'src/entity/bus-model.entity';
 import { User } from 'src/entity/user.entity';
 import { Bus } from 'src/entity/bus.entity';
 import { DuplicateBusDTO } from 'src/dto/duplicate-bus.dto';
+import { UpdateBusDTO } from 'src/dto/update-bus.dto';
+import { UpdateBusStatusDto } from 'src/dto/update-bus-status.dto';
 
 @ApiTags('bus')
 @ApiBearerAuth('accessToken')
@@ -179,10 +181,45 @@ export class BusController {
   ) {
     const _user = user as unknown as any;
     const companyId = user.companyId ? user.companyId : data.companyId;
+    
     return await this.busService.create({
       userId: _user.userId,
       bus: data,
       companyId: companyId!,
+    });
+  }
+
+  @Patch(':id')
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Update bus for a company' })
+  @ApiBody({
+    type: UpdateBusDTO,
+    description: 'Update bus for a company',
+  })
+  @ApiResponse({ status: 201, description: 'Bus updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateBus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() data: UpdateBusDTO,
+  ) {
+    const _user = user as unknown as any;
+    let companyId: string | null = null
+    
+    if (user.companyId){
+      companyId = user.companyId
+    } else {
+      companyId = data.companyId!
+    }
+    
+    return await this.busService.update({
+      id,
+      userId: _user.userId,
+      bus: data,
+      companyId,
     });
   }
 
@@ -209,6 +246,34 @@ export class BusController {
       bus: data,
       companyId: companyId!,
     });
-    return data
+  }
+  
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Toggle bus status' })
+  @ApiParam({ name: 'id', description: 'Bus id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Bus status changed successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Bus not found.',
+  })
+  @Patch('status/:id')
+  async toggleBus(
+    @CurrentUser('userId') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: UpdateBusStatusDto
+  ): Promise<{ data: Bus }> {
+    const result = await this.busService.toggleBusStatus(id, userId, data.status);
+
+    if (!result) {
+      throw new NotFoundException(`Bus with id = ${id} not found.`);
+    }
+
+    return { data: result };
   }
 }
