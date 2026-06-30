@@ -4,6 +4,13 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class PaginationDto {
   @ApiPropertyOptional({
+    description: 'Company Id',
+  })
+  @IsOptional()
+  @IsString()
+  companyId?: string;
+
+  @ApiPropertyOptional({
     description: 'Page number (1-indexed)',
     minimum: 1,
     default: 1,
