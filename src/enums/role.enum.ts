@@ -7,5 +7,6 @@ export enum ROLE {
     CONDUCTOR = 'CONDUCTOR',
     CHECKER = 'CHECKER',
     MAKER = 'MAKER',
-    PASSANGER = 'PASSANGER'
+    PASSANGER = 'PASSANGER',
+    SALES = 'SALES'
 }
