@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,13 +9,115 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDTO } from '../dto/create-user.dto';
 import { User } from '../entity/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
+import * as bcrypt from 'bcrypt';
+import { generateOtp } from 'src/auth/auth.service';
+import { sendSMS } from 'src/util/send-message';
+import { UpdateUserDTO } from 'src/dto/update-user.dto ';
 
 @Injectable()
 export class UserService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
+
+  async createUser({
+    createdById,
+    companyId,
+    data,
+  }: {
+    createdById: string;
+    companyId: string;
+    data: CreateUserDTO;
+  }): Promise<CreateUserDTO> {
+    const existingUser = await this.repo.findOne({
+      where: { phone: data.phone }
+    })
+
+    if (existingUser) {
+      throw new BadRequestException(`User with phone number ${data.phone} already exist.`)
+    }
+
+    const salt = await bcrypt.genSalt();
+    const otp = generateOtp();
+
+    const hashedPassword = await bcrypt.hash(otp.toString(), salt);
+
+    const passwordHistory = [hashedPassword].slice(
+      0,
+      parseInt(process.env.MAX_PASSWORD_HISTORY || '7'),
+    );
+
+    const user = new User();
+    user.companyId = companyId;
+    user.firstName = data.firstName;
+    user.lastName = data.lastName;
+    user.phone = data.phone;
+    user.email = data.email;
+    user.role = data.role;
+    user.realm = data.realm;
+    user.createdById = createdById;
+    user.createdAt = new Date();
+    user.password = hashedPassword;
+    user.passwordHistory = passwordHistory;
+    user.enabled = true;
+    user.gender = data.gender;
+
+    const savedUser = await this.repo.save(user);
+
+    const _user = await this.repo.findOne({ where: { id: savedUser.id } });
+
+    if (!_user) {
+      throw new InternalServerErrorException(
+        'Something went wrong. Please try again or contact the system administrator.',
+      );
+    }
+
+    sendSMS(
+      user.phone,
+      `Dear ${user.firstName} ${user.lastName}. Your password is ${otp.toString()}. Please login to our system and change your password before doing anything. `,
+    );
+
+    return { ..._user } as unknown as CreateUserDTO;
+  }
+
+  async updateateUser({
+    id,
+    data,
+  }: {
+    id: string;
+    data: UpdateUserDTO;
+  }): Promise<UpdateResult> {
+    const existingUser = await this.repo.findOne({
+      where: { id }
+    })
+
+    if (!existingUser) {
+      throw new BadRequestException(`User not found.`)
+    }
+
+    return await this.repo.update(
+      { id: data.id },
+      { ...data, updatedAt: new Date() }
+    )
+  }
+
+  async updateUserStatus(userId: string, updatedById: string): Promise<UpdateResult> {
+    const user = await this.repo.findOne({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      throw new BadRequestException(`User not found.`)
+    }
+
+    const result = await this.repo.update(
+      { id: userId },
+      { enabled: !user.enabled,},
+    )
+
+    return result
+  }
 
   async findOneByPhone(phone: string): Promise<User> {
     const user = await this.repo.findOneBy({
@@ -91,9 +194,7 @@ export class UserService {
     return totalUsers;
   }
 
-  async getUserDetail(
-    id: string,
-  ): Promise<
+  async getUserDetail(id: string): Promise<
     Partial<User> & {
       companyId?: string;
       companyName?: string;
@@ -111,7 +212,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with id = ${id} not found.`);
     }
-    
+
     return {
       id: user.id,
       firstName: user.firstName,
@@ -120,6 +221,7 @@ export class UserService {
       role: user.role,
       email: user.email,
       phone: user.phone,
+      gender: user.gender,
       enable2FA: user.enable2FA,
       createdAt: user.createdAt,
       enabled: user.enabled,

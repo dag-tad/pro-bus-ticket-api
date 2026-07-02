@@ -4,12 +4,17 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 import { Gender } from 'src/enums/gender.enum';
 import { REALM } from 'src/enums/realm.enum';
 import { ROLE } from 'src/enums/role.enum';
 
-export class CreateUserDTO {
+export class UpdateUserDTO {
+  @IsUUID()
+  @IsNotEmpty()
+  id: string;
+
   @IsString()
   @IsNotEmpty()
   firstName: string;
@@ -33,10 +38,6 @@ export class CreateUserDTO {
   @IsString()
   @IsOptional()
   fanNumber: string;
-
-  @IsString()
-  @IsOptional()
-  companyId: string;
 
   @IsOptional()
   @IsEnum(Gender)
