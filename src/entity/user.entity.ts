@@ -83,6 +83,10 @@ export class User {
   })
   gender?: Gender;
 
+  @Column({ type: 'text', nullable: true })
+  @IsOptional()
+  profilePictureUrl: string;
+
   @Column({
     type: 'enum',
     enum: REALM,

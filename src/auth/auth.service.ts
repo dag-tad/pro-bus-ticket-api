@@ -3,6 +3,7 @@ import {
   HttpException,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,6 +34,46 @@ export class AuthService {
     private readonly redis: Redis,
     // private readonly authProducer: AuthProducer
   ) {}
+
+  async getMe(id: string): Promise<
+    Partial<User> & {
+      companyId?: string;
+      companyName?: string;
+      companyPhone?: string;
+      companyRegion?: string;
+      companyCity?: string;
+    }
+  > {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.company', 'company')
+      .where('user.id = :id', { id })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException(`User with id = ${id} not found.`);
+    }
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      realm: user.realm,
+      role: user.role,
+      email: user.email,
+      phone: user.phone,
+      gender: user.gender,
+      enable2FA: user.enable2FA,
+      createdAt: user.createdAt,
+      enabled: user.enabled,
+      profilePictureUrl: user.profilePictureUrl,
+      companyId: user.companyId,
+      companyName: user.company?.name,
+      companyPhone: user.company?.phoneNumber,
+      companyCity: user.company?.city,
+      companyRegion: user.company?.region,
+    };
+  }
 
   async login(
     loginDTO: LoginDTO,
@@ -73,7 +114,6 @@ export class AuthService {
 
     const loginAttemptCount = await this.redis.incr(loginAttemptKey);
     this.redis.expire(loginAttemptKey, 180);
-
 
     const passwordMatched = await bcrypt.compare(
       loginDTO.password,
@@ -338,7 +378,11 @@ export class AuthService {
 
     await this.userRepo.update(
       { id },
-      { password: hashedPassword, passwordHistory: newPasswordHistory, passwordSet: true },
+      {
+        password: hashedPassword,
+        passwordHistory: newPasswordHistory,
+        passwordSet: true,
+      },
     );
 
     return { message: 'your password is successfully changed' };
