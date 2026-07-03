@@ -23,6 +23,8 @@ import { VerifyResetPasswordDto } from '../dto/verify-reset-password.dto';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { RequireAccess } from 'src/decorators/access.decorator';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { User } from 'src/entity/user.entity';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -100,20 +102,8 @@ export class AuthController {
   @Get('me')
   @UseGuards(AccessTokenJWTGuard)
   @RequireAccess(['*'], ['*'])
-  me(@Req() req: any) {
-    const user = req.user;
-
-    return {
-      id: user.userId,
-      role: user.role,
-      realm: user.realm,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      passwordSet: user.passwordSet,
-      purpose: user.purpose,
-    };
+  async me(@CurrentUser('userId') id: string) {
+    return await this.authService.getMe(id);
   }
 
   @Post('verify-otp')
