@@ -341,7 +341,7 @@ export class AuthService {
     const user = await this.userRepo.findOneBy({ id });
 
     if (!user) {
-      throw new UnauthorizedException();
+      return new UnauthorizedException();
     }
 
     // check if the user has been using the new password previously
@@ -351,17 +351,17 @@ export class AuthService {
       const match = await bcrypt.compare(newPassword, oldHash);
 
       if (match) {
-        throw new BadRequestException('You cannot reuse an old password');
+        return new BadRequestException('You cannot reuse an old password');
       }
     }
 
     const passwordMatched = await bcrypt.compare(
-      currentPassword,
+      currentPassword.trim(),
       user.password,
     );
 
     if (!passwordMatched) {
-      throw new BadRequestException('Invalid current password');
+      return new BadRequestException('Invalid current password');
     }
 
     const salt = await bcrypt.genSalt();

@@ -129,17 +129,25 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(AccessTokenJWTGuard)
+  @RequireAccess(['*'], ['*'])
   async changePassword(
     @Body() changePasswordDTO: ChangePasswordDto,
     @Req() req,
+    @CurrentUser() user: any,
   ): Promise<{ message: string } | HttpException> {
-    const { sub } = req.user;
+    try {
+      const { userId } = user;
 
-    return await this.authService.changePassword(
-      sub,
-      changePasswordDTO.currentPassword,
-      changePasswordDTO.newPassword,
-    );
+      const result = await this.authService.changePassword(
+        userId.toString(),
+        changePasswordDTO.currentPassword,
+        changePasswordDTO.newPassword,
+      );
+
+      return result;
+    } catch (error) {
+      return error as unknown as HttpException
+    }
   }
 
   @Post('logout')
