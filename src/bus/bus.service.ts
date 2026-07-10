@@ -31,7 +31,7 @@ export class BusService {
   ) {}
 
   async findAllBusses(
-    @Query() options: PaginationDto,
+    options: PaginationDto,
     companyId?: string,
   ): Promise<PaginatedResponse<Bus>> {
     const { page = 1, limit = 10, search, sortBy, sortOrder } = options;
