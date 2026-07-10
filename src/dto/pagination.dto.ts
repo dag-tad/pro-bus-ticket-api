@@ -14,7 +14,7 @@ export class PaginationDto {
     description: 'Page number (1-indexed)',
     minimum: 1,
     default: 1,
-    example: 2,
+    example: 1,
   })
   @IsOptional()
   @Type(() => Number)

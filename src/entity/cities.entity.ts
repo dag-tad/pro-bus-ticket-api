@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Terminal } from './terminal.entity';
 
 @Entity('cities')
 @Unique(['region', 'cityName'])
@@ -42,4 +44,7 @@ export class City {
   @ManyToOne(() => User, (user) => user.updatedCities)
   @JoinColumn({name: 'updatedById'})
   updatedByUser: User;
+
+  @OneToMany(() => Terminal, (terminal) => terminal.city)
+  terminals: Terminal[];
 }

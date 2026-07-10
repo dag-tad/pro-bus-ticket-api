@@ -9,9 +9,11 @@ import {
   OneToMany,
   ManyToOne,
   JoinTable,
-  Index 
+  Index, 
+  JoinColumn
 } from 'typeorm';
 import { Trip } from './trip.entity';
+import { City } from './cities.entity';
 
 @Entity('terminals')
 // @Index(['name', 'cityId'])
@@ -22,17 +24,10 @@ export class Terminal {
   @Column()
   name: string; // e.g., "Megenagna Bus Terminal", "Akaki Station"
 
-  // @ManyToOne(() => City, city => city.terminals)
-  // city: City;
-
-  @Column()
-  city: string;
-
   @Column({ type: 'json', nullable: true })
   address: {
     subCity: string,
     woreda: string,
-    kebele: string,
   };
 
   @Column({ type: 'json', nullable: true })
@@ -42,7 +37,7 @@ export class Terminal {
   };
 
   @Column({ nullable: true })
-  contactPhone: string;
+  phone: string;
 
   @Column({ nullable: true })
   email: string;
@@ -64,6 +59,13 @@ export class Terminal {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @ManyToOne(() => City, (city) => city.terminals, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'cityId' }) 
+  city: City;
 
 //   @Column({ nullable: true })
 //   totalGates: number;

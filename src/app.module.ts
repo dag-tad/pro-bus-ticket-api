@@ -15,6 +15,9 @@ import { TransportCompanyService } from './transport-company/transport-company.s
 import { TransportCompanyController } from './transport-company/transport-company.controller';
 import { TransportCompanyModule } from './transport-company/transport-company.module';
 import { CityModule } from './city/city.module';
+import { TerminalsController } from './terminals/terminals.controller';
+import { TerminalsService } from './terminals/terminals.service';
+import { TerminalsModule } from './terminals/terminals.module';
 
 @Module({
   imports: [
@@ -44,6 +47,7 @@ import { CityModule } from './city/city.module';
     }),
     TransportCompanyModule,
     CityModule,
+    TerminalsModule,
   ],
   controllers: [AppController,],
   providers: [AppService,],
