@@ -18,6 +18,9 @@ import { CityModule } from './city/city.module';
 import { TerminalsController } from './terminals/terminals.controller';
 import { TerminalsService } from './terminals/terminals.service';
 import { TerminalsModule } from './terminals/terminals.module';
+import { RouteService } from './route/route.service';
+import { RouteController } from './route/route.controller';
+import { RouteModule } from './route/route.module';
 
 @Module({
   imports: [
@@ -29,7 +32,11 @@ import { TerminalsModule } from './terminals/terminals.module';
     AuthModule,
     UserModule,
     BusModule,
+    RouteModule,
     RedisModule,
+    TransportCompanyModule,
+    CityModule,
+    TerminalsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -37,7 +44,7 @@ import { TerminalsModule } from './terminals/terminals.module';
         type: 'postgres',
         url: config.get<string>('DB_URL'),
         ssl: {
-          rejectUnauthorized: false,
+          rejectUnauthorized: false
         },
         // autoLoadEntities: true,
         synchronize: true,
@@ -45,9 +52,6 @@ import { TerminalsModule } from './terminals/terminals.module';
         entities: ['dist/**/*.entity.js']
       }),
     }),
-    TransportCompanyModule,
-    CityModule,
-    TerminalsModule,
   ],
   controllers: [AppController,],
   providers: [AppService,],
