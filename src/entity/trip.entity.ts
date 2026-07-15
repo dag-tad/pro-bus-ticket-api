@@ -7,12 +7,14 @@ import {
   UpdateDateColumn, 
   ManyToOne, 
   OneToMany,
-  Index 
+  Index, 
+  JoinColumn
 } from 'typeorm';
 import { Bus } from './bus.entity';
 import { TransportCompany } from './transport-company.entity';
 import { TripStatus } from '../enums/trip-status.enum';
 import { Booking } from './booking.entity';
+import { Route } from './route.entity';
 
 @Entity('trips')
 // @Index(['originCity', 'destinationCity', 'departureDate'])
@@ -69,13 +71,8 @@ export class Trip {
   @Column({ default: false })
   isDynamicPricing: boolean;
 
-  // @Column({ type: 'json', nullable: true })
-  // dynamicPricingConfig: {
-  //   basePrice: number;
-  //   surgeMultiplier: number;
-  //   demandThreshold: number;
-  //   lastUpdated: Date;
-  // };
+  @Column()
+  routeId: string;
 
   // Relations
   @ManyToOne(() => Bus, bus => bus.trips)
@@ -86,6 +83,10 @@ export class Trip {
 
   @ManyToOne(() => TransportCompany, company => company.trips)
   company: TransportCompany;
+
+  @ManyToOne(() => Route, (route) => route.trips, { eager: false })
+  @JoinColumn({ name: 'routeId' })
+  route: Route;
 
   @Column()
   companyId: string;

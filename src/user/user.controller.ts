@@ -90,7 +90,7 @@ export class UserController {
     return await this.userService.getUserDetail(id);
   }
 
-  @ApiOperation({ summary: 'count users' })
+  @ApiOperation({ summary: 'update user status' })
   @RequireAccess(
     [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
     [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
