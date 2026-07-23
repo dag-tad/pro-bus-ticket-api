@@ -80,7 +80,7 @@ export class UserController {
     return await this.userService.countUsers(companyId);
   }
 
-  @ApiOperation({ summary: 'count users' })
+  @ApiOperation({ summary: 'user detail by id' })
   @RequireAccess(
     [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
     [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
@@ -88,6 +88,18 @@ export class UserController {
   @Get(':id')
   async getUserDetail(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.getUserDetail(id);
+  }
+
+  @ApiOperation({ summary: 'user detail by phone' })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Get('phone/:phone')
+  async getUserByPhone(@CurrentUser() user: User, @Param('phone') id: string, @Query() _companyId: string,) {
+    const companyId = user.companyId ? user.companyId : _companyId;
+    
+    return await this.userService.getUserByPhone(id, companyId);
   }
 
   @ApiOperation({ summary: 'update user status' })

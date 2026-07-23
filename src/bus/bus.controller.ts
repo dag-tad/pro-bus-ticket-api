@@ -122,7 +122,7 @@ export class BusController {
     [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
   )
   @Get('paginate')
-  async findAllBusses(@CurrentUser('userId') user: User, @Query(new NormalizeQueryPipe()) options: PaginationDto) {
+  async findAllBusses(@CurrentUser() user: User, @Query(new NormalizeQueryPipe()) options: PaginationDto) {
     return await this.busService.findAllBusses(options, user.companyId);
   }
 
