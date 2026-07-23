@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   ManyToMany,
   JoinTable,
   Index,
@@ -16,42 +17,44 @@ import {
 } from 'typeorm';
 import { TransportCompany } from './transport-company.entity';
 import { BusStatus } from '../enums/bus-status.enum';
+import { DriverStatus } from '../enums/driver-status.enum';
 import { Trip } from './trip.entity';
 import { BusModel } from './bus-model.entity';
 import { User } from './user.entity';
 import { DriverBus } from './driver-bus.entity';
 
-export type SeatCell = {
-  type: 'seat' | 'aisle' | 'door' | 'restroom';
-  seatNumber: number | string | null;
-};
-
-@Entity('buses')
-export class Bus {
+@Entity('drivers')
+export class Driver {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ nullable: false })
   companyId: string;
 
-  @Column()
-  busModelId: string;
+  @Column({ nullable: true })
+  tripId: string;
 
-  @Column({ unique: true, nullable: false })
-  plateNumber: string;
+  @Column({ unique: true })
+  userId: string;
 
-  @Column({ nullable: false })
-  busNumber: string;
+  @Column({ unique: true, nullable: true })
+  licenseNumber: string;
+
+  @Column({ nullable: true })
+  licenseClass: string;
 
   @Column({
     type: 'enum',
-    enum: BusStatus,
-    default: BusStatus.ACTIVE,
+    enum: DriverStatus,
+    default: DriverStatus.ACTIVE,
   })
-  status: BusStatus;
+  status: DriverStatus;
 
-  @Column({ type: 'json', nullable: true })
-  seatLayout: object;
+  @Column()
+  drivingLicensIssuedOn: Date;
+
+  @Column()
+  drivingLicenseExpresOn: Date;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -60,16 +63,16 @@ export class Bus {
   updatedAt: Date;
 
   // Relationships
-  @OneToMany(() => DriverBus, (driverBus) => driverBus.bus)
+  @OneToMany(() => DriverBus, (driverBus) => driverBus.driver)
   driverBuses: DriverBus[];
 
-  @ManyToOne(() => BusModel, (busModel: BusModel) => busModel.buses)
-  @JoinColumn({ name: 'busModelId' })
-  model: BusModel;
-
-  @ManyToOne(() => TransportCompany, (company) => company.buses)
+  @ManyToOne(() => TransportCompany, (company) => company.drivers)
   @JoinColumn({ name: 'companyId' })
   company: TransportCompany;
+
+  @ManyToOne(() => Trip, (trips) => trips.drivers)
+  @JoinColumn({ name: 'tripId' })
+  trip: Trip;
 
   @OneToMany(() => Trip, (trip) => trip.bus)
   trips: Trip[];
@@ -79,6 +82,14 @@ export class Bus {
 
   @Column({ name: 'updatedById', type: 'uuid', nullable: true })
   updatedById: string;
+
+  //relationship
+  @OneToOne(() => User, (user) => user.driver, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @ManyToOne(() => User, (user) => user.createdBusses, {
     onDelete: 'RESTRICT',

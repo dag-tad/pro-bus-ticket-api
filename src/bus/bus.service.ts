@@ -47,7 +47,7 @@ export class BusService {
     }
 
     if (companyId) {
-      queryBuilder.andWhere('bus.companyId = :companyId', { companyId });
+      queryBuilder.andWhere('buses.companyId = :companyId', { companyId });
     }
 
     queryBuilder.leftJoinAndSelect('buses.createdBy', 'createdBy');

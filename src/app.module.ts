@@ -21,6 +21,9 @@ import { TerminalsModule } from './terminals/terminals.module';
 import { RouteService } from './route/route.service';
 import { RouteController } from './route/route.controller';
 import { RouteModule } from './route/route.module';
+import { DriverController } from './driver/driver.controller';
+import { DriverService } from './driver/driver.service';
+import { DriverModule } from './driver/driver.module';
 
 @Module({
   imports: [
@@ -37,6 +40,7 @@ import { RouteModule } from './route/route.module';
     TransportCompanyModule,
     CityModule,
     TerminalsModule,
+    DriverModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,7 +57,7 @@ import { RouteModule } from './route/route.module';
       }),
     }),
   ],
-  controllers: [AppController,],
-  providers: [AppService,],
+  controllers: [AppController, DriverController,],
+  providers: [AppService],
 })
 export class AppModule { }

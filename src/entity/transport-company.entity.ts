@@ -22,6 +22,7 @@ import { CompanyRating } from './company-rating.entity';
 import { CancellationPolicy } from './cancellation-policy.entity';
 import { CompanyDocument } from './document.entity';
 import { BusModel_Company } from './bus-model_company.entity';
+import { Driver } from './driver.entity';
 import { Route } from './route.entity';
 
 @Entity('transport_companies')
@@ -132,6 +133,9 @@ export class TransportCompany {
   // Relations
   @OneToMany(() => BusModel_Company, (link) => link.company)
   busModelLinks: BusModel_Company[];  
+
+  @OneToMany(() => Driver, (driver) => driver.company)
+  drivers: Driver[];  
 
   @OneToMany(() => Route, (route) => route.model)
   routes: Route[];

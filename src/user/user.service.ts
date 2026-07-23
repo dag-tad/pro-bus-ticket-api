@@ -232,4 +232,45 @@ export class UserService {
       companyRegion: user.company?.region,
     };
   }
+
+  async getUserByPhone(phone: string, companyId: string): Promise<
+    Partial<User> & {
+      companyId?: string;
+      companyName?: string;
+      companyPhone?: string;
+      companyRegion?: string;
+      companyCity?: string;
+    }
+  > {
+    const user = await this.repo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.company', 'company')
+      .where('user.phone = :phone', { phone })
+      .andWhere('user.companyId = :companyId', { companyId })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException(`User with id = ${phone} not found.`);
+    }
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      realm: user.realm,
+      role: user.role,
+      email: user.email,
+      phone: user.phone,
+      gender: user.gender,
+      enable2FA: user.enable2FA,
+      createdAt: user.createdAt,
+      enabled: user.enabled,
+      companyId: user.companyId,
+      companyName: user.company?.name,
+      companyPhone: user.company?.phoneNumber,
+      companyCity: user.company?.city,
+      companyRegion: user.company?.region,
+      profilePictureUrl: user.profilePictureUrl
+    };
+  }
 }

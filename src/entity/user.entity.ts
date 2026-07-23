@@ -21,6 +21,7 @@ import { TransportCompany } from './transport-company.entity';
 import { City } from './cities.entity';
 import { BusModel } from './bus-model.entity';
 import { Bus } from './bus.entity';
+import { Driver } from './driver.entity';
 
 @Entity('users')
 export class User {
@@ -117,10 +118,14 @@ export class User {
   @Column({ nullable: true })
   companyId?: string;
 
+  //relationshio
+  @OneToOne(() => Driver, (driver) => driver.user)
+  driver?: Driver;
+
   @ManyToOne(() => TransportCompany, (company) => company.users, {
     nullable: true,
   })
-  @JoinColumn({ name: 'companyId' })  
+  @JoinColumn({ name: 'companyId' })
   company: TransportCompany;
 
   @ManyToOne(() => User, (user) => user.createdUsers, { nullable: true })
@@ -137,14 +142,14 @@ export class User {
   updatedCities: City[];
 
   @OneToMany(() => BusModel, (busModel) => busModel.createdBy)
-    busModels: BusModel[];
+  busModels: BusModel[];
 
   @OneToMany(() => BusModel, (busModel) => busModel.updatedBy)
-    updatedBusModels: BusModel[];
+  updatedBusModels: BusModel[];
 
   @OneToMany(() => Bus, (bus) => bus.createdBy)
-    createdBusses: Bus[];
+  createdBusses: Bus[];
 
   @OneToMany(() => Bus, (bus) => bus.updatedBy)
-    updatedBusses: Bus[];
+  updatedBusses: Bus[];
 }

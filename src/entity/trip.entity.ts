@@ -1,20 +1,21 @@
 // trip.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
   OneToMany,
-  Index, 
-  JoinColumn
+  Index,
+  JoinColumn,
 } from 'typeorm';
 import { Bus } from './bus.entity';
 import { TransportCompany } from './transport-company.entity';
 import { TripStatus } from '../enums/trip-status.enum';
 import { Booking } from './booking.entity';
 import { Route } from './route.entity';
+import { Driver } from './driver.entity';
 
 @Entity('trips')
 // @Index(['originCity', 'destinationCity', 'departureDate'])
@@ -58,7 +59,7 @@ export class Trip {
   @Column({
     type: 'enum',
     enum: TripStatus,
-    default: TripStatus.SCHEDULED
+    default: TripStatus.SCHEDULED,
   })
   status: TripStatus; // SCHEDULED, ON_TIME, DELAYED, CANCELLED, COMPLETED
 
@@ -75,23 +76,26 @@ export class Trip {
   routeId: string;
 
   // Relations
-  @ManyToOne(() => Bus, bus => bus.trips)
+  @ManyToOne(() => Bus, (bus) => bus.trips)
   bus: Bus;
 
   @Column()
   busId: string;
 
-  @ManyToOne(() => TransportCompany, company => company.trips)
+  @ManyToOne(() => TransportCompany, (company) => company.trips)
   company: TransportCompany;
 
   @ManyToOne(() => Route, (route) => route.trips, { eager: false })
   @JoinColumn({ name: 'routeId' })
   route: Route;
 
+  @OneToMany(() => Driver, (driver) => driver.company)
+  drivers: Driver[];
+
   @Column()
   companyId: string;
 
-  @OneToMany(() => Booking, booking => booking.trip)
+  @OneToMany(() => Booking, (booking) => booking.trip)
   bookings: Booking[];
 
   @CreateDateColumn()
