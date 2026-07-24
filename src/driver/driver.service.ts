@@ -361,7 +361,6 @@ console.log({ companyId, driverId, status })
         })
 
         if (!driver) {
-            console.log('1-----------------------------------')
             return new BadRequestException(`Driver not found.`)
         }
       const now = new Date();

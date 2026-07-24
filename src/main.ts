@@ -34,8 +34,7 @@ async function bootstrap() {
     .setTitle('API Documentation')
     .setDescription('API documentation for B-Ticketing')
     .setVersion('1.0')
-    .addTag('Users', 'User management')
-    .addTag('Company', 'Transport company management')
+    .addTag('Booking', 'Integrated bus booking system')
     .addBearerAuth(
       {
         type: 'http',
