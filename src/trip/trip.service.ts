@@ -110,6 +110,31 @@ export class TripService {
     return _result;
   }
 
+  async getStats(companyId: string): Promise<{ status: string, count: number }[]> {
+    const statuses = Object.values(TripStatus);
+    
+    // Count for each status individually
+    const counts = await Promise.all(
+      statuses.map(async (status) => {
+        const count = await this.repo.count({
+          where: {
+            companyId: companyId,
+            status: status,
+          },
+        });
+        return { status, count };
+      })
+    );
+
+    const totalTrips = await this.repo.count({
+      where: {
+        companyId
+      }
+    })
+
+    return [{ status: 'total_trips', count: totalTrips },  ...counts];
+  }
+
   async create(data: {
     userId: string;
     trip: CreateTripDTO;
