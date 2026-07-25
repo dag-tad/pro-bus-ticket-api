@@ -31,8 +31,8 @@ export class Driver {
   @Column({ nullable: false })
   companyId: string;
 
-  @Column({ nullable: true })
-  tripId: string;
+  // @Column({ nullable: true })
+  // tripId: string;
 
   @Column({ unique: true })
   userId: string;
@@ -70,11 +70,13 @@ export class Driver {
   @JoinColumn({ name: 'companyId' })
   company: TransportCompany;
 
-  @ManyToOne(() => Trip, (trips) => trips.drivers)
-  @JoinColumn({ name: 'tripId' })
-  trip: Trip;
+  // @ManyToOne(() => Trip, (trip) => trip.drivers, {
+  //   nullable: true,
+  // })
+  // @JoinColumn({ name: 'tripId' })
+  // trip: Trip;
 
-  @OneToMany(() => Trip, (trip) => trip.bus)
+  @OneToMany(() => Trip, (trip) => trip.driver)
   trips: Trip[];
 
   @Column({ name: 'createdById', type: 'uuid' })
