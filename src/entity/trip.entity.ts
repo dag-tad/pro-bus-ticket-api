@@ -75,6 +75,9 @@ export class Trip {
   @Column()
   routeId: string;
 
+  @Column()
+  driverId: string;
+
   // Relations
   @ManyToOne(() => Bus, (bus) => bus.trips)
   bus: Bus;
@@ -89,8 +92,9 @@ export class Trip {
   @JoinColumn({ name: 'routeId' })
   route: Route;
 
-  @OneToMany(() => Driver, (driver) => driver.company)
-  drivers: Driver[];
+  @ManyToOne(() => Driver, (driver) => driver.trips)
+  @JoinColumn({ name: 'driverId' })
+  driver: Driver;
 
   @Column()
   companyId: string;
