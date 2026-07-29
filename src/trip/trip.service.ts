@@ -15,6 +15,7 @@ import { Route } from 'src/entity/route.entity';
 import { TransportCompany } from 'src/entity/transport-company.entity';
 import { Trip } from 'src/entity/trip.entity';
 import { User } from 'src/entity/user.entity';
+import { BusStatus } from 'src/enums/bus-status.enum';
 import { TripStatus } from 'src/enums/trip-status.enum';
 import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
 import { Repository } from 'typeorm';
@@ -34,85 +35,148 @@ export class TripService {
     @InjectRepository(Route) private routeRepo: Repository<Route>,
   ) {}
 
-  async findAll(options: PaginationDto, companyId?: string): Promise<any> {
+  async findAllTrips(options: PaginationDto, companyId?: string): Promise<any> {
     const { page = 1, limit = 10, search, sortBy, sortOrder } = options;
     const skip = (page - 1) * limit;
 
-    const scheduledTripBusIds = await this.busRepo
-      .createQueryBuilder('bus')
-      .select('bus.id')
-      .innerJoin('bus.trips', 'trip')
-      .where('trip.status = :status', { status: TripStatus.SCHEDULED })
-      .andWhere('bus.companyId = :companyId', { companyId })
+    const trips = await this.repo
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect('trip.driver', 'driver')
+      .leftJoinAndSelect('driver.user', 'user')
+      .leftJoinAndSelect('trip.bus', 'bus')
+      .leftJoinAndSelect('trip.originCity', 'originCity')
+      .leftJoinAndSelect('trip.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('trip.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('trip.destinationTerminal', 'destinationTerminal')
+      .where('trip.companyId = :companyId', { companyId })
+      .orderBy('trip.departureTime', 'ASC')
       .getMany();
 
-    const scheduledBusIds = scheduledTripBusIds.map((bus) => bus.id);
+    return trips;
+  }
 
-    // Step 2: Get all buses for the company excluding those in scheduled trips
+  async getDetail(id: string, companyId: string): Promise<any> {
+    const trips = await this.repo
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect('trip.driver', 'driver')
+      .leftJoinAndSelect('driver.user', 'user')
+      .leftJoinAndSelect('trip.bus', 'bus')
+      .leftJoinAndSelect('bus.model', 'model')
+      .leftJoinAndSelect('trip.originCity', 'originCity')
+      .leftJoinAndSelect('trip.route', 'route')
+      .leftJoinAndSelect('trip.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('trip.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('trip.destinationTerminal', 'destinationTerminal')
+      .where('trip.companyId = :companyId', { companyId })
+      .andWhere('trip.id = :id', { id })
+      .orderBy('trip.departureTime', 'ASC')
+      .getOne();
+
+    return trips;
+  }
+
+  async findAllBusses(
+    options: PaginationDto & { departureDate: string },
+    companyId: string,
+  ): Promise<any> {
+    const { page = 1, limit = 100, search, sortBy, sortOrder } = options;
+    const skip = (page - 1) * limit;
+
+    const date = options.departureDate.split('T')[0];
+    const startOfDay = new Date(`${date}T00:00:00`);
+    const endOfDay = new Date(`${date}T23:59:59.999`);
+
+    // Find buses already scheduled on the requested date
+    const scheduledTrips = await this.repo
+      .createQueryBuilder('trip')
+      .select('trip.busId', 'busId')
+      .where('trip.status = :status', {
+        status: TripStatus.SCHEDULED,
+      })
+      .andWhere('trip.companyId = :companyId', {
+        companyId,
+      })
+      .andWhere('trip.departureTime BETWEEN :startOfDay AND :endOfDay', {
+        startOfDay,
+        endOfDay,
+      })
+      .getRawMany();
+
+    const scheduledBusIds = scheduledTrips.map((t) => t.busId);
+
     const query = this.busRepo
       .createQueryBuilder('bus')
       .leftJoinAndSelect('bus.model', 'model')
       .leftJoinAndSelect('bus.driverBuses', 'driverBus')
       .leftJoinAndSelect('driverBus.driver', 'driver')
       .leftJoinAndSelect('driver.user', 'user')
-      .where('bus.companyId = :companyId', { companyId });
+      .where('bus.companyId = :companyId', {
+        companyId,
+      })
+      .andWhere('bus.status = :status', {
+        status: BusStatus.ACTIVE,
+      });
 
-    // Only add the NOT IN clause if there are scheduled trips
-    if (scheduledBusIds.length > 0) {
+    if (scheduledBusIds.length) {
       query.andWhere('bus.id NOT IN (:...scheduledBusIds)', {
         scheduledBusIds,
       });
     }
 
-    const availableBuses = await query.getMany();
+    const [data, totalItems] = await query
+      // .orderBy(`bus.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-    // Step 3: Map the data to include only active driver
-    const result = availableBuses.map((bus) => {
-      // Find the active driver for this bus
-      const activeDriverBus = bus.driverBuses?.find(
-        (db) => db.isActive === true,
-      );
+    const totalPages = Math.ceil(totalItems / limit!);
+    const hasNextPage = page! < totalPages;
+    const hasPreviousPage = page! > 1;
 
+    const busses = data.map((bus) => {
+      const activeAssignment = bus.driverBuses.find((d) => d.isActive);
       return {
-        ...bus,
-        activeDriver: activeDriverBus?.driver || null,
-        driverAssignment: activeDriverBus || null,
-        model: bus.model,
+        id: bus.id,
+        busModelId: bus.busModelId,
+        model: bus.model.model,
+        manufacturer: bus.model.manufacturer,
+        totalSeats: bus.model.totalSeats,
+        yearOfManufactur: bus.model.yearOfManufacture,
+        plateNumber: bus.plateNumber,
+        busNumber: bus.busNumber,
+        driver: activeAssignment
+          ? {
+              id: activeAssignment.driver.id,
+              firstName: activeAssignment.driver.user.firstName,
+              lastName: activeAssignment.driver.user.lastName,
+              email: activeAssignment.driver.user.email,
+              phone: activeAssignment.driver.user.phone,
+              gender: activeAssignment.driver.user.gender,
+            }
+          : null,
+        createdAt: bus.createdAt,
+        updatedAt: bus.updatedAt,
       };
     });
 
-    const _result = result.map((item: any) => {
-      return {
-        id: item.id,
-        busModelId: item.busModelId,
-        model: item.model.model,
-        manufacturer: item.model.manufacturer,
-        totalSeats: item.model.totalSeats,
-        yearOfManufactur: item.model.yearOfManufactur,
-        plateNumber: item.plateNumber,
-        busNumber: item.busNumber,
-        driver: item.driverBuses?.map((db: any) => {
-          return {
-            id: db.driver.id,
-            firstName: db.driver.user.firstName,
-            lastName: db.driver.user.lastName,
-            email: db.driver.user.email,
-            phone: db.driver.user.phone,
-            gender: db.driver.user.gender,
-            status: db.isActive,
-          };
-        }),
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      };
-    });
-
-    return _result;
+    return {
+      data: busses,
+      meta: {
+        limit: limit!,
+        totalItems,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+        page: page!,
+      },
+    };
   }
 
-  async getStats(companyId: string): Promise<{ status: string, count: number }[]> {
+  async getStats(
+    companyId: string,
+  ): Promise<{ status: string; count: number }[]> {
     const statuses = Object.values(TripStatus);
-    
+
     // Count for each status individually
     const counts = await Promise.all(
       statuses.map(async (status) => {
@@ -123,16 +187,16 @@ export class TripService {
           },
         });
         return { status, count };
-      })
+      }),
     );
 
     const totalTrips = await this.repo.count({
       where: {
-        companyId
-      }
-    })
+        companyId,
+      },
+    });
 
-    return [{ status: 'total_trips', count: totalTrips },  ...counts];
+    return [{ status: 'total_trips', count: totalTrips }, ...counts];
   }
 
   async create(data: {
@@ -196,10 +260,10 @@ export class TripService {
       }
 
       const newTrip = this.repo.create({
-        originCity: _trip.originCity,
-        destinationCity: _trip.destinationCity,
-        originTerminal: 'departure terminal',
-        destinationTerminal: 'destination terminal',
+        originCityId: _trip.originCityId,
+        destinationCityId: _trip.destinationCityId,
+        originTerminalId: _trip.originTerminalId,
+        destinationTerminalId: _trip.destinationTerminalId,
         departureTime: new Date(_trip.departureDateTime),
         arrivalTime: new Date(_trip.arrivalDateTime),
 

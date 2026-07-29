@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Terminal } from './terminal.entity';
+import { Trip } from './trip.entity';
 
 @Entity('cities')
 @Unique(['region', 'cityName'])
@@ -47,4 +48,10 @@ export class City {
 
   @OneToMany(() => Terminal, (terminal) => terminal.city)
   terminals: Terminal[];
+
+  @OneToMany(() => Trip, (trip) => trip.originCity)
+  departingTrips: Trip[];
+
+  @OneToMany(() => Trip, (trip) => trip.destinationCity)
+  arrivingTrips: Trip[];
 }

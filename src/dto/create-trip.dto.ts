@@ -99,7 +99,7 @@ export class CreateTripDTO {
   })
   @IsString()
   @IsNotEmpty()
-  originCity: string;
+  originCityId: string;
 
   @ApiProperty({
     description: 'Destination city',
@@ -107,7 +107,23 @@ export class CreateTripDTO {
   })
   @IsString()
   @IsNotEmpty()
-  destinationCity: string;
+  destinationCityId: string;
+
+  @ApiProperty({
+    description: 'Origin terminal id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsString()
+  @IsNotEmpty()
+  originTerminalId: string;
+
+  @ApiProperty({
+    description: 'Destination terminal id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsString()
+  @IsNotEmpty()
+  destinationTerminalId: string;
 
   @ApiProperty({
     description: 'Departure data & time',

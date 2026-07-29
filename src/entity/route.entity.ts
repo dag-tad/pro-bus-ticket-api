@@ -13,6 +13,7 @@ import { City } from './cities.entity';
 import { Trip } from './trip.entity';
 import { User } from './user.entity';
 import { TransportCompany } from './transport-company.entity';
+import { Terminal } from './terminal.entity';
 
 @Entity('routes')
 @Index(['originCityId', 'destinationCityId'])
@@ -28,6 +29,14 @@ export class Route {
   @Column({ name: 'originCityId' })
   originCityId: string;
 
+  @ManyToOne(() => Terminal, { eager: false })
+  @JoinColumn({ name: 'originTerminalId' })
+  @Index()
+  originTerminal: Terminal;
+
+  @Column({ name: 'originTerminalId' })
+  originTerminalId: string;
+
   @ManyToOne(() => City, { eager: false })
   @JoinColumn({ name: 'destinationCityId' })
   @Index()
@@ -35,6 +44,14 @@ export class Route {
 
   @Column({ name: 'destinationCityId' })
   destinationCityId: string;
+
+  @ManyToOne(() => Terminal, { eager: false })
+  @JoinColumn({ name: 'destinationTerminalId' })
+  @Index()
+  destinationTerminal: Terminal;
+
+  @Column({ name: 'destinationTerminalId' })
+  destinationTerminalId: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   description: string;

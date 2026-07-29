@@ -21,6 +21,18 @@ export class RouteResponseDTO {
     region: string;
     cityName: string;
   };
+  originTerminal: {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+  };
+  destinationTerminal: {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+  };
   destinationCity: {
     id: string;
     region: string;
@@ -74,6 +86,8 @@ export class RouteService {
       .createQueryBuilder('routes')
       .leftJoinAndSelect('routes.originCity', 'originCity')
       .leftJoinAndSelect('routes.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('routes.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('routes.destinationTerminal', 'destinationTerminal')
       .leftJoinAndSelect('routes.createdBy', 'createdBy')
       .leftJoinAndSelect('routes.updatedBy', 'updatedBy')
       .addSelect([
@@ -138,6 +152,18 @@ export class RouteService {
           id: d.originCityId,
           region: d.originCity.region,
           cityName: d.originCity.cityName,
+        },
+        originTerminal: {
+          id: d.originTerminal.id,
+          name: d.originTerminal.name,
+          latitude: d.originTerminal.coordinates.lat,
+          longitude: d.originTerminal.coordinates.lng,
+        },
+        destinationTerminal: {
+          id: d.destinationTerminal.id,
+          name: d.destinationTerminal.name,
+          latitude: d.destinationTerminal.coordinates.lat,
+          longitude: d.destinationTerminal.coordinates.lng,
         },
         destinationCity: {
           id: d.destinationCityId,
@@ -206,7 +232,9 @@ export class RouteService {
       .leftJoinAndSelect('route.createdBy', 'createdBy')
       .leftJoinAndSelect('route.updatedBy', 'updatedBy')
       .leftJoinAndSelect('route.originCity', 'originCity')
+      .leftJoinAndSelect('route.originTerminal', 'originTerminal')
       .leftJoinAndSelect('route.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('route.destinationTerminal', 'destinationTerminal')
       .where('route.id = :id', { id })
       .getOne();
 
@@ -220,6 +248,18 @@ export class RouteService {
         id: route.originCityId,
         region: route.originCity.region,
         cityName: route.originCity.cityName,
+      },
+      originTerminal: {
+        id: route.originTerminal.id,
+        name: route.originTerminal.name,
+        latitude: route.originTerminal.coordinates.lat,
+        longitude: route.originTerminal.coordinates.lng,
+      },
+      destinationTerminal: {
+        id: route.destinationTerminal.id,
+        name: route.destinationTerminal.name,
+        latitude: route.destinationTerminal.coordinates.lat,
+        longitude: route.destinationTerminal.coordinates.lng,
       },
       destinationCity: {
         id: route.destinationCityId,
@@ -308,7 +348,9 @@ export class RouteService {
 
         const newRoute = this.repo.create({
           originCityId: route.origin,
+          originTerminalId: route.originTerminalId,
           destinationCityId: route.destination,
+          destinationTerminalId: route.destinationTerminalId,
           price: route.fare,
           stops: route.stops,
           estimatedDurationMinutes: route.duration,

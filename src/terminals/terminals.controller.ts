@@ -1,4 +1,14 @@
-import { Body, Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { TerminalsService } from './terminals.service';
 import { RequireAccess } from 'src/decorators/access.decorator';
 import { REALM } from 'src/enums/realm.enum';
@@ -28,33 +38,60 @@ export class TerminalsController {
   ) {
     return await this.service.findAllTerminals(options);
   }
-  
+
   @RequireAccess(
-      [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
-      [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
-    )
-    @ApiOperation({ summary: 'Terminal detail' })
-    @ApiParam({ name: 'id', description: 'Terminal id', type: String })
-    @ApiResponse({
-      status: 200,
-      description: 'Terminal detail fetched successfully.',
-    })
-    @ApiResponse({
-      status: 404,
-      description: 'Terminal not found.',
-    })
-    @Get('detail/:id')
-    async getBusById(
-      @Param('id', ParseUUIDPipe) id: string,
-    ): Promise<{ data: Terminal }> {
-      const result = await this.service.getTerminalById(id);
-  
-      if (!result) {
-        throw new NotFoundException(`Terminal with id = ${id} not found.`);
-      }
-  
-      return { data: result };
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Terminal detail' })
+  @ApiParam({ name: 'id', description: 'Terminal id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Terminal detail fetched successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Terminal not found.',
+  })
+  @Get('detail/:id')
+  async getTerminalById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: Terminal }> {
+    const result = await this.service.getTerminalById(id);
+
+    if (!result) {
+      throw new NotFoundException(`Terminal with id = ${id} not found.`);
     }
+
+    return { data: result };
+  }
+
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Terminal detail' })
+  @ApiParam({ name: 'id', description: 'Terminal id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Terminal detail fetched successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Terminal not found.',
+  })
+  @Get('city/:id')
+  async getTerminalsByCityIdId(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: Terminal[] }> {
+    const result = await this.service.getTerminalsByCityId(id);
+
+    if (!result) {
+      throw new NotFoundException(`Terminal with id = ${id} not found.`);
+    }
+
+    return { data: result };
+  }
 
   @Post('create')
   @RequireAccess(
@@ -76,49 +113,49 @@ export class TerminalsController {
   }
 
   @Patch(':id')
-    @RequireAccess(
-      [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
-      [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
-    )
-    @ApiOperation({ summary: 'Update terminal for a company' })
-    @ApiBody({
-      type: UpdateTerminalDTO,
-      description: 'Update terminal for a company',
-    })
-    @ApiResponse({ status: 201, description: 'Terminal updated successfully' })
-    @ApiResponse({ status: 400, description: 'Bad request' })
-    async updateTerminal(
-      @Param('id', ParseUUIDPipe) id: string,
-      @CurrentUser() user: User,
-      @Body() data: UpdateTerminalDTO,
-    ) {
-      return await this.service.update(id, data);
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Update terminal for a company' })
+  @ApiBody({
+    type: UpdateTerminalDTO,
+    description: 'Update terminal for a company',
+  })
+  @ApiResponse({ status: 201, description: 'Terminal updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateTerminal(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() data: UpdateTerminalDTO,
+  ) {
+    return await this.service.update(id, data);
+  }
+
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @ApiOperation({ summary: 'Toggle terminal status' })
+  @ApiParam({ name: 'id', description: 'Terminal id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Terminal status changed successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Terminal not found.',
+  })
+  @Patch('status/:id')
+  async toggleTerminalStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: Terminal }> {
+    const result = await this.service.toggleTerminalStatus(id);
+
+    if (!result) {
+      throw new NotFoundException(`Terminal with id = ${id} not found.`);
     }
 
-    @RequireAccess(
-        [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
-        [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
-      )
-      @ApiOperation({ summary: 'Toggle terminal status' })
-      @ApiParam({ name: 'id', description: 'Terminal id', type: String })
-      @ApiResponse({
-        status: 200,
-        description: 'Terminal status changed successfully.',
-      })
-      @ApiResponse({
-        status: 404,
-        description: 'Terminal not found.',
-      })
-      @Patch('status/:id')
-      async toggleTerminalStatus(
-        @Param('id', ParseUUIDPipe) id: string,
-      ): Promise<{ data: Terminal }> {
-        const result = await this.service.toggleTerminalStatus(id);
-    
-        if (!result) {
-          throw new NotFoundException(`Terminal with id = ${id} not found.`);
-        }
-    
-        return { data: result };
-      }
+    return { data: result };
+  }
 }

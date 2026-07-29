@@ -73,11 +73,11 @@ export class UpdateRouteDto {
     type: [RouteStopDto],
     example: [
       {
-        cityId: '8f4e5c12-1234-4567-89ab-cdef12345678',
+        cityName: 'Addis Ababa',
         distanceFromOrigin: 120,
       },
       {
-        cityId: '7a3d9f98-9876-5432-ba98-fedcba987654',
+        cityName: 'Kombolcha',
         distanceFromOrigin: 250,
       },
     ],
