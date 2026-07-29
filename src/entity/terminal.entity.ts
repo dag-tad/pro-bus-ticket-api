@@ -60,6 +60,7 @@ export class Terminal {
   @Column({ default: true })
   isActive: boolean;
 
+  // Relations
   @ManyToOne(() => City, (city) => city.terminals, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
@@ -77,20 +78,11 @@ export class Terminal {
 //   @Column({ nullable: true })
 //   operator: string; // e.g., "Addis Ababa City Government", "Ethiopian Road Transport Authority"
 
-  // Relations
-  // @ManyToMany(() => TransportCompany, company => company.terminals)
-  // @JoinTable({
-  //   name: 'terminal_companies',
-  //   joinColumn: { name: 'terminalId', referencedColumnName: 'id' },
-  //   inverseJoinColumn: { name: 'companyId', referencedColumnName: 'id' }
-  // })
-  // companies: TransportCompany[];
+  @OneToMany(() => Trip, (trip) => trip.originTerminal)
+  departingTrips: Trip[];
 
-  // @OneToMany(() => Trip, trip => trip.departureTerminal)
-  // departingTrips: Trip[];
-
-  // @OneToMany(() => Trip, trip => trip.arrivalTerminal)
-  // arrivingTrips: Trip[];
+  @OneToMany(() => Trip, (trip) => trip.destinationTerminal)
+  arrivingTrips: Trip[];
 
   @CreateDateColumn()
   createdAt: Date;

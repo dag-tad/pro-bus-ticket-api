@@ -59,6 +59,16 @@ export class TerminalsService {
     };
   }
 
+  async getTerminalsByCityId(cityId: string): Promise<Terminal[]> {
+    return await this.repo.find({
+      where: {
+        city: { id: cityId },
+        isActive: true, 
+      },
+      relations: ['city'], 
+    });
+  }
+
   async getTerminalById(id: string): Promise<Terminal | null> {
     return await this.repo.findOne({
       where: { id },

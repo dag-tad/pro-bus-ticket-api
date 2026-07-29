@@ -87,11 +87,13 @@ export class RouteController {
     const _user = user as unknown as any;
     const companyId = user.companyId ? user.companyId : data.companyId;
 
-    return await this.service.create({
+    const result = await this.service.create({
       userId: _user.userId,
       companyId: companyId!,
       route: data,
     });
+    
+    return result
   }
 
   @RequireAccess(

@@ -9,7 +9,7 @@ export class RouteStopDto {
   })
   @IsString()
   @IsNotEmpty()
-  cityId: string;
+  cityName: string;
 
   @ApiProperty({
     description: 'Distance of the stop from the origin city in kilometers.',
@@ -45,6 +45,20 @@ export class CreateRouteDto {
   })
   @IsString()
   destination: string;
+
+  @ApiProperty({
+    description: 'Origin terminal ID.',
+    example: 'e8d7d4e1-2a2b-4d76-b2c4-5e8b0d2d9c10',
+  })
+  @IsString()
+  originTerminalId: string;
+
+  @ApiProperty({
+    description: 'Destination terminal ID.',
+    example: 'c9b8a7d6-5f4e-4321-9876-123456789abc',
+  })
+  @IsString()
+  destinationTerminalId: string;
 
   @ApiPropertyOptional({
     description: 'Optional description of the route.',
@@ -93,11 +107,11 @@ export class CreateRouteDto {
     type: [RouteStopDto],
     example: [
       {
-        cityId: '8f4e5c12-1234-4567-89ab-cdef12345678',
+        cityName: 'Addis Ababa',
         distanceFromOrigin: 120,
       },
       {
-        cityId: '7a3d9f98-9876-5432-ba98-fedcba987654',
+        cityName: 'Debre Birhan',
         distanceFromOrigin: 250,
       },
     ],

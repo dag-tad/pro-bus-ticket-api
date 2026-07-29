@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -25,6 +25,19 @@ import { CreateTripDTO } from 'src/dto/create-trip.dto';
 export class TripController {
   constructor(private service: TripService) {}
 
+  @ApiOperation({ summary: 'fetch trips' })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Get('paginate')
+  async getTrips(
+    @CurrentUser() user: User,
+    @Query(new NormalizeQueryPipe()) options: PaginationDto,
+  ) {
+    return await this.service.findAllTrips(options, user.companyId);
+  }
+
   @ApiOperation({ summary: 'fetch busses' })
   @RequireAccess(
     [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
@@ -33,12 +46,28 @@ export class TripController {
   @Get('busses')
   async getBusses(
     @CurrentUser() user: User,
-    @Query(new NormalizeQueryPipe()) options: PaginationDto,
+    @Query(new NormalizeQueryPipe()) options: PaginationDto & { departureDate: string },
   ) {
-    return await this.service.findAll(options, user.companyId);
+    const _user = user as unknown as any;
+    const companyId = _user.companyId ? _user.companyId : _user.companyId;
+
+    return await this.service.findAllBusses(options, companyId);
   }
 
-  @ApiOperation({ summary: 'fetch busses' })
+  @ApiOperation({ summary: 'fetch trip detail' })
+  @RequireAccess(
+    [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
+    [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
+  )
+  @Get(':id')
+  async getTripDetail(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string,) {
+    const _user = user as unknown as any;
+    const companyId = user.companyId ? _user.companyId : _user.companyId;
+
+    return await this.service.getDetail(id, companyId!);
+  }
+
+  @ApiOperation({ summary: 'fetch trip stat' })
   @RequireAccess(
     [REALM.SYSTEM, REALM.TRANSPORT_COMPANY],
     [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN],
@@ -46,7 +75,7 @@ export class TripController {
   @Get('stats')
   async getStats(@CurrentUser() user: User) {
     const _user = user as unknown as any;
-    const companyId = user.companyId ? user.companyId : user.companyId;
+    const companyId = user.companyId ? _user.companyId : _user.companyId;
 
     return await this.service.getStats(companyId!);
   }

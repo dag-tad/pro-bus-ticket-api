@@ -16,6 +16,8 @@ import { TripStatus } from '../enums/trip-status.enum';
 import { Booking } from './booking.entity';
 import { Route } from './route.entity';
 import { Driver } from './driver.entity';
+import { City } from './cities.entity';
+import { Terminal } from './terminal.entity';
 
 @Entity('trips')
 // @Index(['originCity', 'destinationCity', 'departureDate'])
@@ -24,16 +26,16 @@ export class Trip {
   id: string;
 
   @Column()
-  originCity: string;
+  originCityId: string;
 
   @Column()
-  originTerminal: string; // Specific terminal/bus station name
+  originTerminalId: string;
 
   @Column()
-  destinationCity: string;
+  destinationCityId: string;
 
   @Column()
-  destinationTerminal: string;
+  destinationTerminalId: string;
 
   @Column({ type: 'timestamp' })
   departureTime: Date;
@@ -79,13 +81,31 @@ export class Trip {
   driverId: string;
 
   // Relations
+  @ManyToOne(() => City)
+  @JoinColumn({ name: 'originCityId' })
+  originCity: City;
+
+  @ManyToOne(() => City)
+  @JoinColumn({ name: 'destinationCityId' })
+  destinationCity: City;
+
+  @ManyToOne(() => Terminal)
+  @JoinColumn({ name: 'originTerminalId' })
+  originTerminal: Terminal;
+
+  @ManyToOne(() => Terminal)
+  @JoinColumn({ name: 'destinationTerminalId' })
+  destinationTerminal: Terminal;
+
   @ManyToOne(() => Bus, (bus) => bus.trips)
+  @JoinColumn({ name: 'busId' })
   bus: Bus;
 
   @Column()
   busId: string;
 
   @ManyToOne(() => TransportCompany, (company) => company.trips)
+  @JoinColumn({ name: 'companyId' })
   company: TransportCompany;
 
   @ManyToOne(() => Route, (route) => route.trips, { eager: false })
