@@ -131,9 +131,6 @@ export class TransportCompany {
   };
 
   // Relations
-  @OneToMany(() => BusModel_Company, (link) => link.company)
-  busModelLinks: BusModel_Company[];  
-
   @OneToMany(() => Driver, (driver) => driver.company)
   drivers: Driver[];  
 
