@@ -116,28 +116,33 @@ export class RouteService {
       .skip(skip)
       .take(limit)
       .getManyAndCount();
-
+    
     const cityIds = [
       ...new Set(
-        data.flatMap((route) => route.stops?.map((stop) => stop.cityId) ?? []),
+        data.flatMap(
+          (route) =>
+            route.stops?.map((stop) => {
+              return stop.cityName;
+            }) ?? [],
+        ),
       ),
     ];
 
-    const cities = await this.cityRepo.find({
-      where: {
-        id: In(cityIds),
-      },
-    });
+    // const cities = await this.cityRepo.find({
+    //   where: {
+    //     id: In(cityIds),
+    //   },
+    // });
 
-    const cityMap = new Map(cities.map((city) => [city.id, city]));
-
-    for (const route of data) {
-      route.stops =
-        route.stops?.map((stop) => ({
-          ...stop,
-          cityName: cityMap.get(stop.cityId)?.cityName ?? '',
-        })) ?? [];
-    }
+    // const cityMap = new Map(cities.map((city) => [city.id, city]));
+    
+    // for (const route of data) {
+    //   route.stops =
+    //     route.stops?.map((stop) => ({
+    //       ...stop,
+    //       cityName: cityMap.get(stop.cityId)?.cityName ?? '',
+    //     })) ?? [];
+    // }
 
     const totalPages = Math.ceil(totalItems / limit!);
     const hasNextPage = page! < totalPages;

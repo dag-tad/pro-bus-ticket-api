@@ -25,6 +25,7 @@ import { DriverController } from './driver/driver.controller';
 import { DriverService } from './driver/driver.service';
 import { DriverModule } from './driver/driver.module';
 import { TripModule } from './trip/trip.module';
+import { BookingModule } from './booking/booking.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { TripModule } from './trip/trip.module';
         entities: ['dist/**/*.entity.js']
       }),
     }),
+    BookingModule,
   ],
   controllers: [AppController,],
   providers: [AppService],

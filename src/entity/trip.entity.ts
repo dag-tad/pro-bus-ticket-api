@@ -58,6 +58,9 @@ export class Trip {
   @Column({ default: 0 })
   bookedSeats: number;
 
+  @Column({ default: 0 })
+  estimatedDuration: number;
+
   @Column({
     type: 'enum',
     enum: TripStatus,

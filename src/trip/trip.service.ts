@@ -55,6 +55,43 @@ export class TripService {
     return trips;
   }
 
+  async searchTrips(
+    options: PaginationDto & {
+      departureCityId: string;
+      arrivalCityId: string;
+      departureDate: string;
+    },
+  ): Promise<any> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy,
+      sortOrder,
+      departureCityId,
+      arrivalCityId,
+      departureDate,
+    } = options;
+    const skip = (page - 1) * limit;
+
+    const trips = await this.repo
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect('trip.driver', 'driver')
+      .leftJoinAndSelect('trip.company', 'company')
+      .leftJoinAndSelect('driver.user', 'user')
+      .leftJoinAndSelect('trip.bus', 'bus')
+      .leftJoinAndSelect('trip.originCity', 'originCity')
+      .leftJoinAndSelect('trip.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('trip.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('trip.destinationTerminal', 'destinationTerminal')
+      .where('originCity.id = :departureCityId', { departureCityId })
+      .andWhere('destinationCity.id = :arrivalCityId', { arrivalCityId })
+      .orderBy('trip.departureTime', 'ASC')
+      .getMany();
+
+    return trips;
+  }
+
   async getDetail(id: string, companyId: string): Promise<any> {
     const trips = await this.repo
       .createQueryBuilder('trip')
@@ -266,6 +303,7 @@ export class TripService {
         destinationTerminalId: _trip.destinationTerminalId,
         departureTime: new Date(_trip.departureDateTime),
         arrivalTime: new Date(_trip.arrivalDateTime),
+        estimatedDuration: _trip.estimatedDuration,
 
         baseFare: _trip.fare,
         currentFare: _trip.fare,
