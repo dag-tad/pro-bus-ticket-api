@@ -54,4 +54,24 @@ export class BookingService {
 
     return trips;
   }
+
+  async getTripDetail(
+    id: string
+  ): Promise<any> {
+    const trips = await this.repo
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect('trip.driver', 'driver')
+      .leftJoinAndSelect('trip.company', 'company')
+      .leftJoinAndSelect('driver.user', 'user')
+      .leftJoinAndSelect('trip.bus', 'bus')
+      .leftJoinAndSelect('bus.model', 'model')
+      .leftJoinAndSelect('trip.originCity', 'originCity')
+      .leftJoinAndSelect('trip.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('trip.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('trip.destinationTerminal', 'destinationTerminal')
+      .where('trip.id = :id', { id })
+      .getOne();
+
+    return trips;
+  }
 }
