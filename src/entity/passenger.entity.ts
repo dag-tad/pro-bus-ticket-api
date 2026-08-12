@@ -1,19 +1,20 @@
 // passenger.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  OneToOne, 
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
   OneToMany,
   JoinColumn,
-  Index, 
-  ManyToOne
+  Index,
+  ManyToOne,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Booking } from './booking.entity';
 import { RegisteredBy } from '../enums/registered-by.enum';
+import { BookingPassenger } from './booking-passenger.entity';
 
 @Entity('passengers')
 // @Index(['nationalId'])
@@ -22,21 +23,24 @@ export class Passenger {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, nullable: true })
-  userId: string;
+  // @Column({ unique: true, nullable: true })
+  // userId: string;
 
   // Passenger-specific fields
   @Column({ nullable: true })
-  fanNumber: string; // Optional identification
+  idNumber: string; // Optional identification
 
-  @Column({ default: false })
-  hasSmartphone: boolean; // Determines if QR code is useful
+  // @Column({ default: false })
+  // hasSmartphone: boolean; // Determines if QR code is useful
 
   @Column({ nullable: true })
-  phoneNumber: string
+  phoneNumber: string;
 
-  @Column()
-  registeredBy: RegisteredBy
+  @Column({ nullable: true })
+  fullName: string;
+
+  // @Column({ nullable: true })
+  // registeredBy: RegisteredBy;
   // @Column({ type: 'json', nullable: true })
   // preferences: {
   //   preferredSeatPosition?: 'window' | 'aisle';
@@ -83,13 +87,17 @@ export class Passenger {
   // };
 
   // One-to-one relationship with User
-  @ManyToOne(() => User, user => user.passenger)
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  // @OneToOne(() => User, (user) => user.passenger, {
+  //   nullable: true,
+  // })
+  // @JoinColumn({ name: 'userId' })
+  // user: User | null;
 
-  // Relations
-  @OneToMany(() => Booking, booking => booking.passenger)
-  bookings: Booking[];
+  @OneToMany(
+    () => BookingPassenger,
+    (bookingPassenger) => bookingPassenger.passenger,
+  )
+  bookingPassengers: BookingPassenger[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -102,10 +110,10 @@ export class Passenger {
   //   this.totalProxyBookingsMade++;
   //   this.monthlyProxyBookingCount++;
   //   this.lastProxyBookingAt = new Date();
-    
+
   //   // Reset monthly count if new month
   //   const now = new Date();
-  //   if (!this.proxyBookingResetMonth || 
+  //   if (!this.proxyBookingResetMonth ||
   //       now.getMonth() !== this.proxyBookingResetMonth.getMonth() ||
   //       now.getFullYear() !== this.proxyBookingResetMonth.getFullYear()) {
   //     this.monthlyProxyBookingCount = 1;

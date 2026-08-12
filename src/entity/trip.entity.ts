@@ -18,6 +18,7 @@ import { Route } from './route.entity';
 import { Driver } from './driver.entity';
 import { City } from './cities.entity';
 import { Terminal } from './terminal.entity';
+import { TripSeat } from './trip-seat.entity';
 
 @Entity('trips')
 // @Index(['originCity', 'destinationCity', 'departureDate'])
@@ -124,6 +125,9 @@ export class Trip {
 
   @OneToMany(() => Booking, (booking) => booking.trip)
   bookings: Booking[];
+
+  @OneToMany(() => TripSeat, (tripSeat) => tripSeat.trip)
+  tripSeats: TripSeat[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,111 +1,182 @@
 // booking.entity.ts
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
+
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
   OneToMany,
-  Index 
+  JoinColumn,
+  Index,
 } from 'typeorm';
+
 import { User } from './user.entity';
 import { Trip } from './trip.entity';
 import { BookingType } from '../enums/booking-type.enum';
 import { BookingStatus } from '../enums/booking-status.enum';
-import { Passenger } from './passenger.entity';
 import { Payment } from './payment.entity';
+import { BookingPassenger } from './booking-passenger.entity';
 
 @Entity('bookings')
-// @Index(['bookingReference', 'confirmationNumber'])
-// @Index(['passengerPhone', 'tripId'])
+@Index(['tripId', 'status'])
+@Index(['status', 'expiresAt'])
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  bookingReference: string; // Format: B + timestamp + random (e.g., B20231201123456)
+  @Column({ nullable: true })
+  orderNumber?: string;
 
-  @Column({ unique: true })
-  confirmationNumber: string; // 6-digit number for boarding verification
+  @Column({ nullable: true })
+  externalReferenceId?: string;
 
   @Column({
     type: 'enum',
-    enum: BookingType
+    enum: BookingType,
   })
-  bookingType: BookingType; // SELF, PROXY
+  bookingType: BookingType;
 
   @Column({
     type: 'enum',
     enum: BookingStatus,
-    default: BookingStatus.PENDING
+    default: BookingStatus.PENDING,
   })
-  status: BookingStatus; // PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW
+  status: BookingStatus;
 
-  @Column()
-  seatNumber: string; // e.g., "12A", "B4"
+  /**
+   * Total fare for all passengers/seats.
+   */
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+  })
+  fare: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  fare: number; // Price at time of booking
+  /**
+   * Platform fee for the entire booking.
+   */
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+  })
+  platformFee: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  platformFee: number; // Platform commission/fee
+  /**
+   * fare + platformFee
+   */
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+  })
+  totalAmount: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  totalAmount: number; // fare + platformFee
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  expiresAt: Date | null;
 
-  @Column({ type: 'timestamp' })
-  bookingTime: Date;
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  paymentTime?: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  paymentTime: Date;
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  cancellationTime?: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  cancellationTime: Date;
+  @Column({
+    nullable: true,
+  })
+  cancellationReason?: string;
 
-  @Column({ nullable: true })
-  cancellationReason: string;
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  refundAmount?: number;
 
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  refundAmount: number;
-
-  @Column({ default: false })
+  @Column({
+    default: false,
+  })
   isBoarded: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
-  boardedAt: Date; 
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  boardedAt?: Date;
 
-  @Column({ nullable: true })
-  qrCodeUrl: string; // URL to QR code image
+  @Column({
+    nullable: true,
+  })
+  qrCodeUrl?: string;
 
-  @Column({ type: 'json', nullable: true })
-  specialRequests: string[]; // e.g., ["wheelchair", "extra baggage"]
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+  })
+  specialRequests?: string[];
 
-  // Relations
-  @ManyToOne(() => User, user => user.id, { nullable: true })
-  booker: User; // The person who made the booking (can be null for guest bookings)
+  // ---------------------------------------------------------
+  // Booker
+  // ---------------------------------------------------------
 
-  @Column({ nullable: true })
-  bookerId: string;
+  @ManyToOne(() => User, (user) => user.bookings, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'bookerId' })
+  booker?: User;
 
-  @ManyToOne(() => Passenger, passenger => passenger.bookings)
-  passenger: Passenger; // The actual traveler
+  @Column({
+    nullable: true,
+  })
+  bookerId?: string;
 
-  @Column()
-  passengerId: string;
+  // ---------------------------------------------------------
+  // Trip
+  // ---------------------------------------------------------
 
-  @ManyToOne(() => Trip, trip => trip.bookings)
+  @ManyToOne(() => Trip, (trip) => trip.bookings)
+  @JoinColumn({ name: 'tripId' })
   trip: Trip;
 
   @Column()
   tripId: string;
 
-  @OneToMany(() => Payment, payment => payment.booking)
+  // ---------------------------------------------------------
+  // Passengers
+  // ---------------------------------------------------------
+
+  @OneToMany(
+    () => BookingPassenger,
+    (bookingPassenger) => bookingPassenger.booking,
+    {
+      cascade: false,
+    },
+  )
+  passengers: BookingPassenger[];
+
+  // ---------------------------------------------------------
+  // Payments
+  // ---------------------------------------------------------
+
+  @OneToMany(() => Payment, (payment) => payment.booking)
   payments: Payment[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    type: 'timestamptz',
+  })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({
+    type: 'timestamptz',
+  })
   updatedAt: Date;
 }

@@ -22,6 +22,7 @@ import { City } from './cities.entity';
 import { BusModel } from './bus-model.entity';
 import { Bus } from './bus.entity';
 import { Driver } from './driver.entity';
+import { Booking } from './booking.entity';
 
 @Entity('users')
 export class User {
@@ -132,8 +133,8 @@ export class User {
   @JoinColumn({ name: 'createdById' })
   createdBy?: User;
 
-  @OneToOne(() => Passenger, (passenger) => passenger.user, { cascade: true })
-  passenger: Passenger;
+  // @OneToOne(() => Passenger, (passenger) => passenger.user, { cascade: true })
+  // passenger: Passenger;
 
   @OneToMany(() => City, (city) => city.createdByUser)
   createdCities: City[];
@@ -152,4 +153,7 @@ export class User {
 
   @OneToMany(() => Bus, (bus) => bus.updatedBy)
   updatedBusses: Bus[];
+
+  @OneToMany(() => Booking, (booking) => booking.booker)
+  bookings: Booking[];
 }
