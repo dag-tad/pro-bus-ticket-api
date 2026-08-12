@@ -7,18 +7,19 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTripDTO } from 'src/dto/create-trip.dto';
 import { PaginationDto } from 'src/dto/pagination.dto';
-import { BusModel } from 'src/entity/bus-model.entity';
+import { BusModel, SeatLayout } from 'src/entity/bus-model.entity';
 import { Bus } from 'src/entity/bus.entity';
 import { DriverBus } from 'src/entity/driver-bus.entity';
 import { Driver } from 'src/entity/driver.entity';
 import { Route } from 'src/entity/route.entity';
 import { TransportCompany } from 'src/entity/transport-company.entity';
+import { TripSeat } from 'src/entity/trip-seat.entity';
 import { Trip } from 'src/entity/trip.entity';
 import { User } from 'src/entity/user.entity';
 import { BusStatus } from 'src/enums/bus-status.enum';
 import { TripStatus } from 'src/enums/trip-status.enum';
 import { PaginatedResponse } from 'src/interfaces/paginatedResponse.interface';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class TripService {
@@ -33,6 +34,7 @@ export class TripService {
     @InjectRepository(TransportCompany)
     private companyRepo: Repository<TransportCompany>,
     @InjectRepository(Route) private routeRepo: Repository<Route>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAllTrips(options: PaginationDto, companyId?: string): Promise<any> {
@@ -62,6 +64,7 @@ export class TripService {
       departureDate: string;
     },
   ): Promise<any> {
+    console.log('----------------------------');
     const {
       page = 1,
       limit = 10,
@@ -89,6 +92,7 @@ export class TripService {
       .orderBy('trip.departureTime', 'ASC')
       .getMany();
 
+    console.log(JSON.stringify(trips[0].bus.seatLayout, null, 2));
     return trips;
   }
 
@@ -296,37 +300,73 @@ export class TripService {
         );
       }
 
-      const newTrip = this.repo.create({
-        originCityId: _trip.originCityId,
-        destinationCityId: _trip.destinationCityId,
-        originTerminalId: _trip.originTerminalId,
-        destinationTerminalId: _trip.destinationTerminalId,
-        departureTime: new Date(_trip.departureDateTime),
-        arrivalTime: new Date(_trip.arrivalDateTime),
-        estimatedDuration: _trip.estimatedDuration,
+      const result = await this.dataSource.transaction(async (tx) => {
+        const trip = await tx.save(Trip, {
+          originCityId: _trip.originCityId,
+          destinationCityId: _trip.destinationCityId,
+          originTerminalId: _trip.originTerminalId,
+          destinationTerminalId: _trip.destinationTerminalId,
+          departureTime: new Date(_trip.departureDateTime),
+          arrivalTime: new Date(_trip.arrivalDateTime),
+          estimatedDuration: _trip.estimatedDuration,
 
-        baseFare: _trip.fare,
-        currentFare: _trip.fare,
+          baseFare: _trip.fare,
+          currentFare: _trip.fare,
 
-        totalSeats: existingBus.model.totalSeats,
-        availableSeats: existingBus.model.totalSeats,
-        bookedSeats: 0,
+          totalSeats: existingBus.model.totalSeats,
+          availableSeats: existingBus.model.totalSeats,
+          bookedSeats: 0,
 
-        status: TripStatus.SCHEDULED,
+          status: TripStatus.SCHEDULED,
 
-        driver: existingDriver,
-        bus: existingBus,
-        company: existingCompany,
-        route: existingRoute,
+          driver: existingDriver,
+          bus: existingBus,
+          company: existingCompany,
+          route: existingRoute,
 
-        // createdById: userId,
+          // createdById: userId,
+        });
+
+        const seatNumbers: string[] = [];
+        const data = trip.bus.seatLayout as unknown as {
+          type: string;
+          seatNumber: string | null | undefined;
+        }[][];
+        
+        data.forEach(
+          (
+            item: {
+              type: string;
+              seatNumber: string | null | undefined;
+            }[],
+          ) => {
+            item.forEach(
+              (i: { type: string; seatNumber: string | null | undefined }) => {
+                if (i.seatNumber) {
+                  seatNumbers.push(i.seatNumber);
+                }
+              },
+            );
+          },
+        );
+        
+        const tripSeats = seatNumbers.map(seatNumber => {
+          return {
+            tripId: trip.id,
+            seatNumber: seatNumber,
+          }
+        })
+
+        await tx.save(TripSeat, tripSeats)
+        return trip;
       });
 
-      const savedTrip = await this.repo.save(newTrip);
+      return result;
+      // const savedTrip = await this.repo.save(newTrip);
 
-      return await this.repo.findOne({
-        where: { id: savedTrip.id },
-      });
+      // return await this.repo.findOne({
+      //   where: { id: savedTrip.id },
+      // });
     }
   }
 }
