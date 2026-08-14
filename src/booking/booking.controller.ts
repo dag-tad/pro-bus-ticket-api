@@ -59,8 +59,15 @@ export class BookingController {
   @ApiResponse({ status: 201, description: 'Booking created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createTrip(@Body() data: CreateBookingDTO) {
-    const result = await this.service.createBooking(data)
+    const result = await this.service.createBooking(data);
 
-    return result
+    return result;
+  }
+
+  @Post('payment-callback')
+  async paymentCallback(
+    @Body() data: { billRefNo?: string; status: 'PAID' | 'FAILED' },
+  ) {
+    return await this.service.starpayCallback(data);
   }
 }

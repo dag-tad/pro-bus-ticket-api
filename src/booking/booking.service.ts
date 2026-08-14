@@ -12,13 +12,15 @@ import { PaginationDto } from 'src/dto/pagination.dto';
 import { BookingPassenger } from 'src/entity/booking-passenger.entity';
 import { Booking } from 'src/entity/booking.entity';
 import { Passenger } from 'src/entity/passenger.entity';
+import { TransportCompany } from 'src/entity/transport-company.entity';
 import { TripSeat } from 'src/entity/trip-seat.entity';
 import { Trip } from 'src/entity/trip.entity';
 import { BookingStatus } from 'src/enums/booking-status.enum';
 import { BookingType } from 'src/enums/booking-type.enum';
 import { TripSeatStatus } from 'src/enums/trip-seat-status.enum';
 import { TripStatus } from 'src/enums/trip-status.enum';
-import { DataSource, Repository } from 'typeorm';
+import { sendSMS } from 'src/util/send-message';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class BookingService {
@@ -142,7 +144,7 @@ export class BookingService {
             availableSeats: () => `"availableSeats" + ${passengerCount}`,
           })
           .where('id = :tripId', {
-            tripId: booking.tripId,
+            tripId: id,
           })
           .execute();
       }
@@ -259,15 +261,14 @@ export class BookingService {
 
           lockedSeats.push(tripSeat);
         }
-        
+
         // fee calculation can be changed based on the discussion I will have with the team
         const farePerPassenger = Number(trip.currentFare ?? trip.baseFare);
         const platformFeePerPassenger = 7.5;
 
         const fare = farePerPassenger * requestedPassengers.length;
 
-        const platformFee =
-          (platformFeePerPassenger / 100) * fare;
+        const platformFee = (platformFeePerPassenger / 100) * fare;
 
         const totalAmount = fare + platformFee;
 
@@ -336,7 +337,7 @@ export class BookingService {
             customerName: data.contactPersonName,
             customerPhoneNumber: data.contactPersonPhone,
             items: _items,
-            callbackURL: 'https://example.com/start_pay_callback',
+            callbackURL: `${process.env.STARPAY_CALLBACK}/booking/payment-callback`,
             expiredAt: expiresAt,
             redirectUrl: 'http://localhost:3001',
             metadata: {
@@ -361,10 +362,89 @@ export class BookingService {
       });
       return booking;
     } catch (error) {
-      console.log(JSON.stringify(error, null, 2))
       throw new BadGatewayException(
         'Unable to initiate payment. Please try again.',
       );
+    }
+  }
+
+  async starpayCallback(data: {
+    billRefNo?: string;
+    status: 'PAID' | 'FAILED';
+  }) {
+    try {
+      const result = await this.dataSource.transaction(async (manager) => {
+        const { billRefNo, status } = data;
+        
+        // find booking
+        const booking = await manager.findOne(Booking, {
+          where: { orderNumber: billRefNo },
+        });
+        
+
+        if (!booking) {
+          return new NotFoundException('Booking not found');
+        }
+
+        // update booking status
+        if (status === 'PAID') {
+          await manager.update(
+            Booking,
+            { orderNumber: billRefNo },
+            { status: BookingStatus.COMPLETED },
+          );
+
+          const bookingPassengers = await manager.find(BookingPassenger, {
+            where: {
+              bookingId: booking.id,
+            },
+            relations: ['passenger'],
+          });
+
+          const seatNumbers = bookingPassengers.map((item) => item.seatNumber);
+
+          // update trip_seats
+          const updatedResult = await manager.update(
+            TripSeat,
+            { seatNumber: In(seatNumbers) },
+            { status: TripSeatStatus.BOOKED },
+          );
+
+          for (let i = 0; i < bookingPassengers.length; i++) {
+            // generate ticket numbers
+            const trip = await manager.findOne(Trip, {
+              where: { id: booking.id },
+            });
+
+            const company = await manager.findOne(TransportCompany, {
+              where: { id: trip?.companyId },
+            });
+
+            const companyName = company?.tradeName;
+
+            const ticketNumber =
+              companyName +
+              ' ' +
+              String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+
+            await manager.update(
+              BookingPassenger,
+              { id: bookingPassengers[0].id },
+              { ticketNumber },
+            );
+
+            sendSMS(
+              bookingPassengers[i].passenger.phoneNumber,
+              `Dear ${bookingPassengers[i].passenger.fullName}. Ticket no. = ${ticketNumber} and seat no. = ${bookingPassengers[i].seatNumber}`,
+              // `Dear ${bookingPassengers[i].passenger.phoneNumber}. Your booking is successfully completed. Your ticket number is ${ticketNumber} and your seat number is ${bookingPassengers[i].seatNumber}. Thank you for choosing us.`,
+            );
+          }
+        }
+      });
+
+      result;
+    } catch (error) {
+      throw new BadGatewayException('Unable to confirm payment.');
     }
   }
 }
