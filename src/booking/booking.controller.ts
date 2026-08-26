@@ -14,6 +14,7 @@ import { NormalizeQueryPipe } from 'src/pipes/normalize-query.pipe';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateBookingDTO } from 'src/dto/create-booking.dto';
+import { CancellationPolicy } from 'src/entity/cancellation-policy.entity';
 
 @Controller('booking')
 export class BookingController {
@@ -32,6 +33,20 @@ export class BookingController {
 
     if (!result) {
       throw new NotFoundException(`Trip not found.`);
+    }
+
+    return { data: result };
+  }
+
+  @Get('cancellation-policy/:id')
+  async getCancellationPolicyByCompanyId(
+    @Query(new NormalizeQueryPipe())
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ data: CancellationPolicy  | null }> {
+    const result = await this.service.getCancellationPolicyByCompanyId(id);
+
+    if (!result) {
+      return { data: null }
     }
 
     return { data: result };

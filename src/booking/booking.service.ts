@@ -11,6 +11,7 @@ import { CreateBookingDTO } from 'src/dto/create-booking.dto';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { BookingPassenger } from 'src/entity/booking-passenger.entity';
 import { Booking } from 'src/entity/booking.entity';
+import { CancellationPolicy } from 'src/entity/cancellation-policy.entity';
 import { Passenger } from 'src/entity/passenger.entity';
 import { TransportCompany } from 'src/entity/transport-company.entity';
 import { TripSeat } from 'src/entity/trip-seat.entity';
@@ -26,6 +27,8 @@ import { DataSource, In, Repository } from 'typeorm';
 export class BookingService {
   constructor(
     @InjectRepository(Trip) private repo: Repository<Trip>,
+    @InjectRepository(CancellationPolicy)
+    private policyRepo: Repository<CancellationPolicy>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -180,6 +183,15 @@ export class BookingService {
     return _trip;
   }
 
+  async getCancellationPolicyByCompanyId(id: string): Promise<any> {
+    return await this.policyRepo.findOne({
+      where: {
+        companyId: id,
+      },
+      relations: ['company', 'tiers'],
+    });
+  }
+
   async createBooking(data: CreateBookingDTO) {
     try {
       if (!data.passengers || data.passengers.length === 0) {
@@ -220,6 +232,15 @@ export class BookingService {
           'This trip is no longer available for booking',
         );
       }
+
+      const policy = await this.policyRepo.findOne({
+        where: {
+          companyId: trip.companyId,
+          enabled: true,
+        },
+      });
+
+      const policyId = policy ? policy.id : undefined;
 
       const _items = data.passengers.map((p: { fullName: string }) => {
         return {
@@ -282,6 +303,7 @@ export class BookingService {
           bookingTime: now,
           expiresAt,
           tripId: trip.id,
+          cancellationPolicyId: policyId
         });
 
         const savedBooking = await manager.save(Booking, newBooking);
@@ -375,12 +397,11 @@ export class BookingService {
     try {
       const result = await this.dataSource.transaction(async (manager) => {
         const { billRefNo, status } = data;
-        
+
         // find booking
         const booking = await manager.findOne(Booking, {
           where: { orderNumber: billRefNo },
         });
-        
 
         if (!booking) {
           return new NotFoundException('Booking not found');

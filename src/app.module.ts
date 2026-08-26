@@ -26,6 +26,7 @@ import { DriverService } from './driver/driver.service';
 import { DriverModule } from './driver/driver.module';
 import { TripModule } from './trip/trip.module';
 import { BookingModule } from './booking/booking.module';
+import { CancellationPolicyModule } from './cancellation-policy/cancellation-policy.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { BookingModule } from './booking/booking.module';
       }),
     }),
     BookingModule,
+    CancellationPolicyModule,
   ],
   controllers: [AppController,],
   providers: [AppService],

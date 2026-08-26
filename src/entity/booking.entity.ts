@@ -124,6 +124,11 @@ export class Booking {
   })
   specialRequests?: string[];
 
+  @Column({
+    nullable: true,
+  })
+  cancellationPolicyId?: string;
+
   // ---------------------------------------------------------
   // Booker
   // ---------------------------------------------------------
