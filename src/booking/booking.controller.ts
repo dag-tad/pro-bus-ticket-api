@@ -52,7 +52,7 @@ export class BookingController {
     return { data: result };
   }
 
-  @Get('detail/:id')
+  @Get('/trip/detail/:id')
   async getTripDetail(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ data: Trip[] }> {
@@ -60,6 +60,19 @@ export class BookingController {
 
     if (!result) {
       throw new NotFoundException(`Trip not found.`);
+    }
+
+    return { data: result };
+  }
+
+  @Get('/detail/:bookingNumber')
+  async getBookingDetailByBookingNumber(
+    @Param('bookingNumber') bookingNumber: string,
+  ): Promise<{ data: any }> {
+    const result = await this.service.getBookingDetailByBookingNumber(bookingNumber);
+
+    if (!result) {
+      throw new NotFoundException(`Booking not found.`);
     }
 
     return { data: result };

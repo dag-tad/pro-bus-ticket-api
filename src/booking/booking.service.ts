@@ -27,6 +27,8 @@ import { DataSource, In, Repository } from 'typeorm';
 export class BookingService {
   constructor(
     @InjectRepository(Trip) private repo: Repository<Trip>,
+    @InjectRepository(BookingPassenger) private passengerRepo: Repository<BookingPassenger>,
+    @InjectRepository(Booking) private bookingRepo: Repository<Booking>,
     @InjectRepository(CancellationPolicy)
     private policyRepo: Repository<CancellationPolicy>,
     private readonly dataSource: DataSource,
@@ -181,6 +183,50 @@ export class BookingService {
     });
 
     return _trip;
+  }
+
+  async getBookingDetailByBookingNumber(bookingNumber: string): Promise<any> {
+    const data  = await this.passengerRepo.createQueryBuilder('bookingPassenger')
+      .leftJoinAndSelect('bookingPassenger.booking', 'booking')
+      .leftJoinAndSelect('bookingPassenger.passenger', 'passenger')
+      .leftJoinAndSelect('bookingPassenger.tripSeat', 'tripSeat')
+      .leftJoinAndSelect('booking.trip', 'trip')
+      .leftJoinAndSelect('trip.originCity', 'originCity')
+      .leftJoinAndSelect('trip.destinationCity', 'destinationCity')
+      .leftJoinAndSelect('trip.originTerminal', 'originTerminal')
+      .leftJoinAndSelect('trip.destinationTerminal', 'destinationTerminal')
+      .leftJoinAndSelect('trip.bus', 'bus')
+      .leftJoinAndSelect('trip.company', 'company')
+      .leftJoinAndSelect('trip.driver', 'driver')
+      .leftJoinAndSelect('trip.route', 'route')
+      .leftJoinAndSelect('booking.booker', 'booker')
+      .leftJoinAndSelect('booking.payments', 'payments')
+      .where('bookingPassenger.ticketNumber = :ticketNumber', { ticketNumber: bookingNumber })
+      .getOne();
+
+      if (!data) {
+        throw new NotFoundException(`Ticket number: ${bookingNumber} not found`)
+      }
+      
+      const result = {
+        id: data.id,
+        passengerName: data.passenger.fullName,
+        company: data.booking.trip.company.name,
+        plateNumber: data.booking.trip.bus.plateNumber,
+        busNumber: data.booking.trip.bus.busNumber,
+        tripStatus: data.booking.trip.status,
+        BookingStatus: data.booking.status,
+        departure: data.booking.trip.originCity.cityName,
+        destination: data.booking.trip.destinationCity.cityName,
+        tripDuration: data.booking.trip.estimatedDuration,
+        departureAt: data.booking.trip.departureTime,
+        arrivalAt: data.booking.trip.arrivalTime,
+        fare: data.booking.trip.baseFare,
+        esitmatedDurateion: data.booking.trip.estimatedDuration,
+        seat: data.seatNumber
+      }
+
+    return { ...result }
   }
 
   async getCancellationPolicyByCompanyId(id: string): Promise<any> {
@@ -443,10 +489,7 @@ export class BookingService {
 
             const companyName = company?.tradeName;
 
-            const ticketNumber =
-              companyName +
-              ' ' +
-              String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+            const ticketNumber = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
 
             await manager.update(
               BookingPassenger,
