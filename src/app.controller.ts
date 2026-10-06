@@ -10,6 +10,6 @@ export class AppController {
   @ApiResponse({ status: 200, description: 'Success', })
   @Get()
   health(): { message: string } {
-    return this.appService.getHello();
+    return this.appService.healthCheck();
   }
 }

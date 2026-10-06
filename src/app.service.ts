@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): { message: string } {
+  healthCheck(): { message: string } {
     return {
-      message: "B-Ticket is running..."
+      message: "Pro-Bus-Ticket is running..."
     };
   }
 }
