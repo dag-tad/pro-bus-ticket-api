@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 export class AppService {
   healthCheck(): { message: string } {
     return {
-      message: "B-Ticket is running..."
+      message: "Pro-Bus-Ticket is running..."
     };
   }
 }
