@@ -13,9 +13,9 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { randomInt, randomBytes } from 'crypto';
+import { randomInt, randomBytes, randomUUID } from 'crypto';
 import { REDIS_CLIENT } from '../redis/redis.provider';
-import { Redis } from '@upstash/redis';
+import Redis from 'ioredis';
 
 export function generateOtp(length = 6): string {
   let otp = '';
@@ -32,7 +32,6 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
-    // private readonly authProducer: AuthProducer
   ) {}
 
   async getMe(id: string): Promise<
@@ -88,7 +87,7 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException(
-        'Incorrect credentials. Please enter your phone number and password',
+        'Incorrect credentials.',
       );
     }
 
@@ -101,19 +100,19 @@ export class AuthService {
     const loginAttemptKey = `auth:login-attempt-count:user:${user.id}`;
     const temporaryLockKey = `auth:temporary-lock:user:${user.id}`;
     const blockUserKey = `auth:block-user:user:${user.id}`;
-
+    
     const temporaryLocked = (await this.redis.get(
       temporaryLockKey,
     )) as unknown as boolean;
 
+    const loginAttemptCount = await this.redis.incr(loginAttemptKey);
+    this.redis.expire(loginAttemptKey, 180);
+    
     if (temporaryLocked) {
       throw new UnauthorizedException(
         'You are temporarly locked. Please try again later.',
       );
     }
-
-    const loginAttemptCount = await this.redis.incr(loginAttemptKey);
-    this.redis.expire(loginAttemptKey, 180);
 
     const passwordMatched = await bcrypt.compare(
       loginDTO.password,
@@ -139,7 +138,7 @@ export class AuthService {
           jti,
           purpose: 'refreshToken',
         },
-        { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET }, // 7d
+        { expiresIn: '7d', secret: process.env.JWT_REFRESH_SECRET }, 
       );
 
       const loginToken = this.jwtService.sign(
@@ -148,29 +147,24 @@ export class AuthService {
           ...payload,
           purpose: 'accessToken',
         },
-        { expiresIn: '1h' },
+        { expiresIn: '10m' },
       );
 
       // save refreshToken on redis.
       await this.redis.set(
         `auth:refreshToken:user:${sub}`,
         refreshToken,
-        {
-          ex: 604800,
-        },
-        // 'EX',
-        // 604800,
+        'EX',
+        604800,
       );
 
       if (user.enable2FA) {
         const otp = generateOtp();
 
         // save accessToken on redis
-        await this.redis.set(`auth:accessToken:user:${sub}`, loginToken, {
-          ex: 500,
-        });
+        await this.redis.set(`auth:accessToken:user:${sub}`, loginToken, 'EX', 500);
         // save otp on redis
-        await this.redis.set(`auth:otp:user:${sub}`, otp, { ex: 300 });
+        await this.redis.set(`auth:otp:user:${sub}`, otp, 'EX', 300 );
         const url = process.env.SMS_URL!;
         const sender_short_code = process.env.SMS_SHORT_CODE!;
         const message = `Your one time password is ${otp}. Use this to login`;
@@ -222,7 +216,7 @@ export class AuthService {
         throw new UnauthorizedException(
           'You are temporarly locked. Please try again later.',
         );
-      } else if (loginAttemptCount === 3 && userBlocked) {
+      } else if (loginAttemptCount === 5 && userBlocked) {
         await this.userRepo.update(
           { id: user.id },
           { enabled: false, lockedReason: 'Too many login attempt' },
@@ -326,9 +320,7 @@ export class AuthService {
     );
 
     // save refreshToken on redis
-    await this.redis.set(`auth:refreshToken:user:${sub}`, refreshToken, {
-      ex: 604800,
-    });
+    await this.redis.set(`auth:refreshToken:user:${sub}`, refreshToken, 'EX', 604800);
 
     return { refreshToken: refreshToken, accessToken: accessToken };
   }
@@ -403,9 +395,7 @@ export class AuthService {
     const message = `Your one time password is ${otp}. Use this to reset your password`;
 
     // save otp on redis
-    await this.redis.set(`auth:reset-password-otp:user:${user.id}`, otp, {
-      ex: 300,
-    });
+    await this.redis.set(`auth:reset-password-otp:user:${user.id}`, otp, 'EX', 300);
 
     // this should be removed from here and be included in the notification service
     await axios.post(
