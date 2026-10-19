@@ -154,9 +154,9 @@ export class AuthController {
   @UseGuards(AccessTokenJWTGuard)
   @RequireAccess(['*'], ['*'])
   async logout(@Req() req): Promise<{ message: string } | HttpException> {
-    const { sub } = req.user;
+    const { userId } = req.user;
 
-    return await this.authService.logout(sub);
+    return await this.authService.logout(userId);
   }
 
   @Post('reset-password-request')
