@@ -231,7 +231,7 @@ export class AuthService {
         await this.redis.expire(loginAttemptKey, 500);
       } else if (loginAttemptCount === 5) {
       }
-      throw new UnauthorizedException('Incorrect password');
+      throw new UnauthorizedException('Invalid phone number or password');
     }
   }
 
