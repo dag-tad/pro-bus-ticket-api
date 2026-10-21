@@ -50,7 +50,7 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(process.env.PORT ?? 3001, () => {
-    console.log(`🚀 Auth service is running on ${process.env.PORT}`);
+    console.log(`🚀 Pro-bus is running on ${process.env.PORT}`);
   });
 
   process.on('SIGTERM', async () => {
