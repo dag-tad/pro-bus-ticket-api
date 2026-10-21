@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Query,
@@ -142,11 +143,15 @@ export class TransportCompanyService {
           `Dear ${_user.firstName} ${_user.lastName}. Your password is ${otp.toString()}. Please login to our system and change your password before doing anything. `,
         );
 
-        return { company: savedCompany, user: savedUser };
+        return { company: savedCompany, user: savedUser, status: 201 };
       });
 
       return result;
     } catch (error) {
+      if((error as unknown as any).driverError && (error as unknown as any).driverError.code === "23505") {
+        return new ConflictException((error as unknown as any).driverError.detail)
+      }
+      
       return new InternalServerErrorException(error);
     }
   }
