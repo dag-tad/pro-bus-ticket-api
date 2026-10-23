@@ -20,6 +20,7 @@ import { REALM } from 'src/enums/realm.enum';
 import { generateOtp } from 'src/auth/auth.service';
 import * as bcrypt from 'bcrypt';
 import { sendSMS } from 'src/util/send-message';
+import { UpdateTransportCompanyDTO } from 'src/dto/update-transport-company.dto';
 
 @Injectable()
 export class TransportCompanyService {
@@ -72,8 +73,8 @@ export class TransportCompanyService {
 
   async create(
     id: string,
-    file: Express.Multer.File,
     data: CreateTransportCompanyDTO,
+    file?: Express.Multer.File,
   ) {
     try {
       const existingCompany = await this.repo.find({
@@ -90,10 +91,18 @@ export class TransportCompanyService {
           description: 'name and licence number must be unique',
         });
       }
-      const uploadedImage = await this.imageUploader.uploadImage(file.path);
+      const uploadedImage:
+        | {
+            url: string;
+            publicId: string;
+          }
+        | undefined = file
+        ? await this.imageUploader.uploadImage(file.path)
+        : undefined;
 
-      await fs.promises.unlink(file.path);
-
+      if (file) {
+        await fs.promises.unlink(file.path);
+      }
       const result = await this.dataSource.transaction(async (mgr) => {
         const _company = new TransportCompany();
         const otp = generateOtp();
@@ -102,7 +111,7 @@ export class TransportCompanyService {
         _company.name = data.name;
         _company.tradeName = data.tradeName;
         _company.description = data.description;
-        _company.logoUrl = uploadedImage.url;
+        _company.logoUrl = uploadedImage ? uploadedImage.url : '';
         _company.website = data.website;
         _company.email = data.email;
         _company.phoneNumber = data.phoneNumber;
@@ -133,7 +142,7 @@ export class TransportCompanyService {
         _user.createdAt = new Date();
         _user.password = hashedPassword;
         _user.passwordHistory = passwordHistory;
-        _user.enabled = false
+        _user.enabled = false;
 
         const savedCompany = await mgr.save(_company);
         const savedUser = await mgr.save(_user);
@@ -148,18 +157,60 @@ export class TransportCompanyService {
 
       return result;
     } catch (error) {
-      if((error as unknown as any).driverError && (error as unknown as any).driverError.code === "23505") {
-        return new ConflictException((error as unknown as any).driverError.detail)
+      if (
+        (error as unknown as any).driverError &&
+        (error as unknown as any).driverError.code === '23505'
+      ) {
+        return new ConflictException(
+          (error as unknown as any).driverError.detail,
+        );
       }
-      
+
       return new InternalServerErrorException(error);
     }
   }
 
-  async getCompanyById(
-    id: string,
-  ): Promise< TransportCompany | null > {
+  async getCompanyById(id: string): Promise<TransportCompany | null> {
     return await this.repo.findOneBy({ id });
+  }
+
+  async updateTransportCompany(
+    id: string,
+    data: UpdateTransportCompanyDTO,
+    file?: Express.Multer.File,
+  ): Promise<{ success: boolean; message: string }> {
+    const uploadedImage:
+      | {
+          url: string;
+          publicId: string;
+        }
+      | undefined = file
+      ? await this.imageUploader.uploadImage(file.path)
+      : undefined;
+
+    let affectedRows: number | undefined = 0;
+    if (file) {
+      await fs.promises.unlink(file.path);
+
+      const result = await this.repo.update(id, {
+        ...data,
+        logoUrl: uploadedImage!.url,
+      });
+
+      affectedRows = result.affected;
+    } else {
+      const result = await this.repo.update(id, {
+        ...data,
+      });
+
+      affectedRows = result.affected;
+    }
+
+    if (affectedRows && affectedRows > 0) {
+      return { success: true, message: "'Company updated successfully" };
+    }
+
+    return { success: false, message: 'Company update failed' };
   }
 
   async updateStatus(
@@ -167,7 +218,7 @@ export class TransportCompanyService {
     status: CompanyStatus,
   ): Promise<{ success: boolean; message: string }> {
     const result = await this.repo.update(id, {
-      status,
+      status: status as CompanyStatus,
     });
 
     if (result.affected && result.affected > 0) {
