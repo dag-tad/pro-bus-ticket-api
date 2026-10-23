@@ -1,7 +1,7 @@
-import { IsEmail, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { AddressDTO } from './shared.dto';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTransportCompanyDTO {
   @ApiProperty({
@@ -111,8 +111,13 @@ export class CreateTransportCompanyDTO {
   @IsNotEmpty()
   woreda: string;
 
-  @ApiProperty({ type: 'string', format: 'binary', description: 'Company logo' })
-  logo: string;
+  @ApiPropertyOptional({
+  type: 'string',
+  format: 'binary',
+  description: 'Company logo (optional)',
+})
+  @IsOptional()
+  logo?: string;
 
   // company's admin information
   @ApiProperty({ type: 'string', description: "Admin first name", example: "Abebe", required: true})
