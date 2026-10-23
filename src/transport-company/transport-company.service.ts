@@ -167,7 +167,7 @@ export class TransportCompanyService {
     status: CompanyStatus,
   ): Promise<{ success: boolean; message: string }> {
     const result = await this.repo.update(id, {
-      status,
+      status: status as CompanyStatus,
     });
 
     if (result.affected && result.affected > 0) {

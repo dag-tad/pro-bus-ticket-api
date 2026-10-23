@@ -76,7 +76,7 @@ export class TransportCompanyController {
     return { data: result }
   }
 
-  @Patch(':id')
+  @Patch('status/:id')
   @RequireAccess([REALM.SYSTEM], [ROLE.SUPER_ADMIN, ROLE.COMPANY_ADMIN])
   @ApiOperation({ summary: 'Update company status' })
   @ApiBody({
